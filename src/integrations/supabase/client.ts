@@ -14,10 +14,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flow: 'pkce',
-    debug: false,
-    // Disable lock manager to prevent timeout issues
-    lock: false,
   },
   db: {
     schema: 'public'

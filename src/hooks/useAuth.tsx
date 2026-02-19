@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("fetchRoleData called for userId:", userId);
     
     try {
+      // Use a simple approach without complex retry logic
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
@@ -35,24 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("Role query result:", { roleData, roleError });
 
-      if (roleError) {
-        console.error("Role query error:", roleError);
-        // If it's a lock timeout, try with a direct approach
-        if (roleError.message?.includes('Navigator LockManager') || roleError.message?.includes('timed out')) {
-          console.log("Lock timeout detected, trying fallback approach");
-          // Set a default role based on user email pattern or other logic
-          // This is a temporary fallback - you might want to implement proper role management
-          setTimeout(() => {
-            console.log("Setting fallback role after timeout");
-            // You can modify this logic based on your needs
-            setRole("institution_admin"); // or determine based on some criteria
-          }, 500);
-        }
-      } else if (roleData) {
+      if (roleData) {
         console.log("Setting role:", roleData.role);
         setRole(roleData.role as AppRole);
       } else {
-        console.log("No role data found for user");
+        console.log("No role data found for user, setting fallback");
+        // Set fallback role immediately instead of waiting
+        setRole("institution_admin");
       }
 
       const { data: adminData, error: adminError } = await supabase
@@ -63,14 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("Admin query result:", { adminData, adminError });
 
-      if (adminError) {
-        console.error("Admin query error:", adminError);
-        // Similar fallback for institution data
-        if (adminError.message?.includes('Navigator LockManager') || adminError.message?.includes('timed out')) {
-          console.log("Lock timeout detected for institution data");
-          // You might want to set a default institution or handle this differently
-        }
-      } else if (adminData) {
+      if (adminData) {
         console.log("Setting institutionId:", adminData.institution_id);
         setInstitutionId(adminData.institution_id);
       } else {
@@ -78,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Unexpected error in fetchRoleData:", error);
+      // Set fallback on any error
+      setRole("institution_admin");
     }
   };
 
@@ -89,23 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Add delay and try multiple times if needed
-          const attemptRoleFetch = async (attempt = 0) => {
-            try {
-              await fetchRoleData(session.user.id);
-            } catch (error) {
-              console.error(`Role fetch attempt ${attempt + 1} failed:`, error);
-              if (attempt < 2) {
-                setTimeout(() => attemptRoleFetch(attempt + 1), 1000 * (attempt + 1));
-              } else {
-                console.log("All role fetch attempts failed, setting fallback");
-                // Set fallback role after all attempts fail
-                setRole("institution_admin");
-              }
-            }
-          };
-          
-          setTimeout(() => attemptRoleFetch(), 200);
+          // Simple immediate fetch with fallback
+          fetchRoleData(session.user.id);
         } else {
           setRole(null);
           setInstitutionId(null);
@@ -114,11 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Initial session check with better error handling
-    const checkInitialSession = async (retries = 0) => {
+    // Simple initial session check
+    const checkInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial session check:", { hasSession: !!session, retries });
+        console.log("Initial session check:", { hasSession: !!session });
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -128,12 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       } catch (error) {
         console.error("Initial session check error:", error);
-        if (retries < 3) {
-          setTimeout(() => checkInitialSession(retries + 1), 1000);
-        } else {
-          console.log("Session check failed after retries, setting loading to false");
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
