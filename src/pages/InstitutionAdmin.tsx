@@ -130,8 +130,11 @@ const InstitutionAdmin = () => {
 
   const handleBulkInsert = async () => {
 
-    if (!previewData || !institutionId) return;
-
+    if (!previewData) return;
+    if (!institutionId) {
+      toast({ title: "Institution not found", description: "Please log out and log back in.", variant: "destructive" });
+      return;
+    }
     setUploading(true);
 
 

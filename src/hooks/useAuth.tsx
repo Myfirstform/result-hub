@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          setTimeout(() => fetchRoleData(session.user.id), 0);
+          await fetchRoleData(session.user.id);
         } else {
           setRole(null);
           setInstitutionId(null);
