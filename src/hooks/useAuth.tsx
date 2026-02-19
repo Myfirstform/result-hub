@@ -24,35 +24,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchRoleData = async (userId: string) => {
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    console.log("fetchRoleData called for userId:", userId);
+    
+    try {
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (roleData) {
-      setRole(roleData.role as AppRole);
-    }
+      console.log("Role query result:", { roleData, roleError });
 
-    const { data: adminData } = await supabase
-      .from("institution_admins")
-      .select("institution_id")
-      .eq("user_id", userId)
-      .maybeSingle();
+      if (roleError) {
+        console.error("Role query error:", roleError);
+        // Don't throw, just log and continue
+      } else if (roleData) {
+        console.log("Setting role:", roleData.role);
+        setRole(roleData.role as AppRole);
+      } else {
+        console.log("No role data found for user");
+      }
 
-    if (adminData) {
-      setInstitutionId(adminData.institution_id);
+      const { data: adminData, error: adminError } = await supabase
+        .from("institution_admins")
+        .select("institution_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      console.log("Admin query result:", { adminData, adminError });
+
+      if (adminError) {
+        console.error("Admin query error:", adminError);
+        // Don't throw, just log and continue
+      } else if (adminData) {
+        console.log("Setting institutionId:", adminData.institution_id);
+        setInstitutionId(adminData.institution_id);
+      } else {
+        console.log("No admin data found for user");
+      }
+    } catch (error) {
+      console.error("Unexpected error in fetchRoleData:", error);
     }
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log("Auth state changed:", { event: _event, hasSession: !!session });
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchRoleData(session.user.id);
+          // Add small delay to avoid race conditions
+          setTimeout(() => {
+            fetchRoleData(session.user.id);
+          }, 100);
         } else {
           setRole(null);
           setInstitutionId(null);
@@ -61,14 +87,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRoleData(session.user.id);
+    // Initial session check with retry
+    const checkInitialSession = async (retries = 0) => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initial session check:", { hasSession: !!session, retries });
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          fetchRoleData(session.user.id);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("Initial session check error:", error);
+        if (retries < 3) {
+          setTimeout(() => checkInitialSession(retries + 1), 1000);
+        } else {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+
+    checkInitialSession();
 
     return () => subscription.unsubscribe();
   }, []);

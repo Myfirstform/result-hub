@@ -15,6 +15,7 @@ import InstitutionLogs from "./pages/InstitutionLogs";
 import StudentResult from "./pages/StudentResult";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import RoleAssigner from "./pages/RoleAssigner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/assign-role" element={<RoleAssigner />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/super" element={<ProtectedRoute requiredRole="super_admin"><SuperAdmin /></ProtectedRoute>} />
             <Route path="/admin/super/stats" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminStats /></ProtectedRoute>} />
