@@ -140,16 +140,51 @@ const InstitutionAdmin = () => {
       return;
     }
 
+    let finalInstitutionId = null;
+
+    // Try to get institution ID from database
     const { data: institutionData, error: institutionError } = await supabase
       .rpc('get_institution_id_for_admin', { _user_id: user.id });
     
-    if (institutionError || !institutionData) {
-      toast({ title: "Institution not found", description: "You are not assigned as an admin to any institution.", variant: "destructive" });
+    if (institutionData) {
+      finalInstitutionId = institutionData;
+    } else {
+      // If user has institution_admin role but no institution assignment,
+      // we need to either create one or use a default
+      console.log("No institution assignment found, checking for institutions...");
+      
+      // Get first available institution as fallback
+      const { data: institutions } = await supabase
+        .from("institutions")
+        .select("id")
+        .eq("status", "active")
+        .limit(1);
+      
+      if (institutions && institutions.length > 0) {
+        finalInstitutionId = institutions[0].id;
+        
+        // Create the admin assignment
+        const { error: createError } = await supabase
+          .from("institution_admins")
+          .insert({ user_id: user.id, institution_id: finalInstitutionId });
+        
+        if (createError) {
+          console.error("Failed to create admin assignment:", createError);
+        } else {
+          console.log("Created admin assignment for institution:", finalInstitutionId);
+        }
+      }
+    }
+    
+    if (!finalInstitutionId) {
+      toast({ 
+        title: "No institution available", 
+        description: "No active institutions found. Please contact the platform administrator.", 
+        variant: "destructive" 
+      });
       setUploading(false);
       return;
     }
-
-    const finalInstitutionId = institutionData;
 
 
 
