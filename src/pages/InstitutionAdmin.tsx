@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
 import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Pencil } from "lucide-react";
@@ -55,7 +55,6 @@ interface StudentResult {
 
 
 const InstitutionAdmin = () => {
-
   const { institutionId } = useAuth();
 
   const [results, setResults] = useState<StudentResult[]>([]);
@@ -129,13 +128,28 @@ const InstitutionAdmin = () => {
 
 
   const handleBulkInsert = async () => {
-
     if (!previewData) return;
-    if (!institutionId) {
-      toast({ title: "Institution not found", description: "Please log out and log back in.", variant: "destructive" });
+    
+    setUploading(true);
+
+    // Get institution_id from database function to ensure it's always available
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "User not authenticated", variant: "destructive" });
+      setUploading(false);
       return;
     }
-    setUploading(true);
+
+    const { data: institutionData, error: institutionError } = await supabase
+      .rpc('get_institution_id_for_admin', { _user_id: user.id });
+    
+    if (institutionError || !institutionData) {
+      toast({ title: "Institution not found", description: "You are not assigned as an admin to any institution.", variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const finalInstitutionId = institutionData;
 
 
 
@@ -161,7 +175,7 @@ const InstitutionAdmin = () => {
 
       return {
 
-        institution_id: institutionId,
+        institution_id: finalInstitutionId,
 
         register_number: String(register_number || RegisterNumber || regNum || ""),
 
@@ -273,16 +287,14 @@ const InstitutionAdmin = () => {
 
           <DialogContent className="max-w-2xl">
 
-            <DialogHeader><DialogTitle>Upload Results</DialogTitle></DialogHeader>
+            <DialogHeader>
+  <DialogTitle>Upload Results</DialogTitle>
+  <DialogDescription>
+    Upload a CSV or Excel file with student results. Required columns: register_number, secret_code, student_name.
+  </DialogDescription>
+</DialogHeader>
 
             <div className="space-y-4">
-
-              <p className="text-sm text-muted-foreground">
-
-                Upload a CSV or Excel file. Required columns: register_number, secret_code, student_name. Other columns become subjects.
-
-              </p>
-
               <Input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
 
               {previewData && (
