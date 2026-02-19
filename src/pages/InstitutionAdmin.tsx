@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Upload, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface StudentResult {
@@ -68,7 +69,6 @@ const InstitutionAdmin = () => {
     setUploading(true);
 
     const rows = previewData.map((row: any) => {
-      // Extract known fields, rest becomes subjects
       const { register_number, RegisterNumber, "Register Number": regNum,
         secret_code, SecretCode, "Secret Code": secCode,
         student_name, StudentName, "Student Name": stuName,
@@ -101,7 +101,7 @@ const InstitutionAdmin = () => {
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: `${rows.length} results uploaded` });
+      toast({ title: `${rows.length} results uploaded successfully` });
       setUploadDialogOpen(false);
       setPreviewData(null);
       fetchResults();
@@ -127,8 +127,12 @@ const InstitutionAdmin = () => {
 
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Student Results</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5 text-primary" />
+          <h1 className="text-2xl font-bold">Student Results</h1>
+          {!loading && <Badge variant="secondary" className="ml-1">{results.length}</Badge>}
+        </div>
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2"><Upload className="h-4 w-4" />Upload CSV/Excel</Button>
@@ -143,12 +147,12 @@ const InstitutionAdmin = () => {
               {previewData && (
                 <>
                   <p className="text-sm font-medium">{previewData.length} rows found. Preview:</p>
-                  <div className="max-h-60 overflow-auto border rounded-md">
+                  <div className="max-h-60 overflow-auto border rounded-lg">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           {Object.keys(previewData[0] || {}).map((k) => (
-                            <TableHead key={k} className="text-xs">{k}</TableHead>
+                            <TableHead key={k} className="text-xs whitespace-nowrap">{k}</TableHead>
                           ))}
                         </TableRow>
                       </TableHeader>
@@ -173,53 +177,71 @@ const InstitutionAdmin = () => {
         </Dialog>
       </div>
 
-      <div className="mb-4">
-        <Input placeholder="Search by name or register number..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
+      <div className="mb-4 relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or register number..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 max-w-sm"
+        />
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Register No.</TableHead>
-                <TableHead>Student Name</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No results found</TableCell></TableRow>
-              ) : filtered.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono">{r.register_number}</TableCell>
-                  <TableCell className="font-medium">{r.student_name}</TableCell>
-                  <TableCell>{r.class || "—"}</TableCell>
-                  <TableCell>{r.total ?? "—"}</TableCell>
-                  <TableCell>{r.grade || "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={r.published ? "default" : "secondary"}>
-                      {r.published ? "Published" : "Draft"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => togglePublish(r.id, r.published)}>
-                      {r.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Register No.</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead className="hidden sm:table-cell">Class</TableHead>
+                  <TableHead className="hidden sm:table-cell">Total</TableHead>
+                  <TableHead className="hidden md:table-cell">Grade</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
+                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-12" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No results found</TableCell></TableRow>
+                ) : filtered.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono text-sm">{r.register_number}</TableCell>
+                    <TableCell className="font-medium">{r.student_name}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{r.class || "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{r.total ?? "—"}</TableCell>
+                    <TableCell className="hidden md:table-cell">{r.grade || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant={r.published ? "default" : "secondary"} className="text-xs">
+                        {r.published ? "Published" : "Draft"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => togglePublish(r.id, r.published)} title={r.published ? "Unpublish" : "Publish"}>
+                        {r.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} title="Delete">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </AdminLayout>
