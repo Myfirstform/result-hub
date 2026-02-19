@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { GraduationCap, Printer } from "lucide-react";
+import { GraduationCap, Printer, Loader2, SearchX } from "lucide-react";
 
 interface InstitutionInfo {
   id: string;
@@ -57,7 +58,6 @@ const StudentResult = () => {
     setSearching(true);
     setResult(null);
 
-    // Log the search
     await supabase.from("access_logs").insert({
       institution_id: institution.id,
       register_number: regNumber,
@@ -81,16 +81,31 @@ const StudentResult = () => {
   };
 
   if (loadingInst) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b bg-card py-4">
+          <div className="mx-auto max-w-2xl px-4 flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-lg" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+        </header>
+        <main className="flex-1 flex items-start justify-center py-8 px-4">
+          <div className="w-full max-w-2xl space-y-4">
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (notFound) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-6">
-            <p className="text-lg font-medium text-muted-foreground">Institution not found</p>
-            <p className="text-sm text-muted-foreground mt-2">The institution "{slug}" does not exist or is inactive.</p>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md text-center animate-fade-in">
+          <CardContent className="pt-8 pb-8 space-y-3">
+            <SearchX className="mx-auto h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-semibold">Institution Not Found</p>
+            <p className="text-sm text-muted-foreground">The institution "<span className="font-mono">{slug}</span>" does not exist or is inactive.</p>
           </CardContent>
         </Card>
       </div>
@@ -98,14 +113,14 @@ const StudentResult = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-background border-b py-4">
+      <header className="border-b bg-card py-4 print:border-0">
         <div className="mx-auto max-w-2xl px-4 flex items-center gap-3">
           {institution?.logo_url ? (
-            <img src={institution.logo_url} alt={institution.name} className="h-10 w-10 rounded object-cover" />
+            <img src={institution.logo_url} alt={institution.name} className="h-10 w-10 rounded-lg object-cover" />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded bg-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
           )}
@@ -115,7 +130,7 @@ const StudentResult = () => {
 
       {/* Content */}
       <main className="flex-1 flex items-start justify-center py-8 px-4">
-        <div className="w-full max-w-2xl space-y-6">
+        <div className="w-full max-w-2xl space-y-6 animate-fade-in">
           {!result ? (
             <Card>
               <CardHeader>
@@ -132,7 +147,7 @@ const StudentResult = () => {
                     <Input value={secretCode} onChange={(e) => setSecretCode(e.target.value)} required placeholder="Enter your secret code" />
                   </div>
                   <Button type="submit" className="w-full" disabled={searching}>
-                    {searching ? "Searching..." : "View Result"}
+                    {searching ? <><Loader2 className="h-4 w-4 animate-spin" />Searching...</> : "View Result"}
                   </Button>
                 </form>
               </CardContent>
@@ -140,24 +155,24 @@ const StudentResult = () => {
           ) : (
             <div className="space-y-4 print:space-y-2" id="result-card">
               <Card>
-                <CardHeader className="text-center">
-                  <div className="flex items-center justify-center gap-3 mb-2">
+                <CardHeader className="text-center border-b pb-6">
+                  <div className="flex items-center justify-center gap-3 mb-3">
                     {institution?.logo_url ? (
-                      <img src={institution.logo_url} alt="" className="h-12 w-12 rounded object-cover" />
+                      <img src={institution.logo_url} alt="" className="h-14 w-14 rounded-lg object-cover" />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded bg-primary">
-                        <GraduationCap className="h-6 w-6 text-primary-foreground" />
+                      <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary">
+                        <GraduationCap className="h-7 w-7 text-primary-foreground" />
                       </div>
                     )}
-                    <CardTitle className="text-xl">{institution?.name}</CardTitle>
                   </div>
-                  <p className="text-lg font-semibold">{result.student_name}</p>
-                  <div className="flex justify-center gap-6 text-sm text-muted-foreground">
-                    <span>Reg: {result.register_number}</span>
+                  <CardTitle className="text-xl">{institution?.name}</CardTitle>
+                  <p className="text-lg font-semibold mt-2">{result.student_name}</p>
+                  <div className="flex justify-center gap-6 text-sm text-muted-foreground mt-1">
+                    <span>Reg: <span className="font-mono">{result.register_number}</span></span>
                     {result.class && <span>Class: {result.class}</span>}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
                     <Table>
                       <TableHeader>
@@ -176,12 +191,25 @@ const StudentResult = () => {
                       </TableBody>
                     </Table>
                   )}
-                  <div className="mt-4 flex justify-between border-t pt-4">
-                    <div className="space-y-1 text-sm">
-                      {result.total != null && <p><span className="font-medium">Total:</span> {result.total}</p>}
-                      {result.grade && <p><span className="font-medium">Grade:</span> {result.grade}</p>}
-                      {result.rank && <p><span className="font-medium">Rank:</span> {result.rank}</p>}
-                    </div>
+                  <div className="mt-4 grid grid-cols-3 gap-4 border-t pt-4 text-center">
+                    {result.total != null && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total</p>
+                        <p className="text-2xl font-bold">{result.total}</p>
+                      </div>
+                    )}
+                    {result.grade && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Grade</p>
+                        <p className="text-2xl font-bold">{result.grade}</p>
+                      </div>
+                    )}
+                    {result.rank && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Rank</p>
+                        <p className="text-2xl font-bold">{result.rank}</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -199,7 +227,7 @@ const StudentResult = () => {
 
       {/* Footer */}
       {institution?.footer_message && (
-        <footer className="border-t bg-background py-3 text-center text-sm text-muted-foreground print:border-0">
+        <footer className="border-t bg-card py-4 text-center text-sm text-muted-foreground print:border-0">
           {institution.footer_message}
         </footer>
       )}

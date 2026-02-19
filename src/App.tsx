@@ -13,6 +13,8 @@ import SuperAdminStats from "./pages/SuperAdminStats";
 import InstitutionAdmin from "./pages/InstitutionAdmin";
 import InstitutionLogs from "./pages/InstitutionLogs";
 import StudentResult from "./pages/StudentResult";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/super" element={<ProtectedRoute requiredRole="super_admin"><SuperAdmin /></ProtectedRoute>} />
             <Route path="/admin/super/stats" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminStats /></ProtectedRoute>} />

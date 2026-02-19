@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Search } from "lucide-react";
 
 const SuperAdminStats = () => {
   const [stats, setStats] = useState({ institutions: 0, results: 0, searches: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchStats = async () => {
       const [instRes, resultsRes, logsRes] = await Promise.all([
         supabase.from("institutions").select("id", { count: "exact", head: true }),
         supabase.from("student_results").select("id", { count: "exact", head: true }),
@@ -19,14 +21,15 @@ const SuperAdminStats = () => {
         results: resultsRes.count || 0,
         searches: logsRes.count || 0,
       });
+      setLoading(false);
     };
-    fetch();
+    fetchStats();
   }, []);
 
   const cards = [
-    { label: "Institutions", value: stats.institutions, icon: Building2 },
-    { label: "Total Results", value: stats.results, icon: Users },
-    { label: "Total Searches", value: stats.searches, icon: Search },
+    { label: "Institutions", value: stats.institutions, icon: Building2, color: "text-primary" },
+    { label: "Total Results", value: stats.results, icon: Users, color: "text-primary" },
+    { label: "Total Searches", value: stats.searches, icon: Search, color: "text-primary" },
   ];
 
   return (
@@ -37,10 +40,14 @@ const SuperAdminStats = () => {
           <Card key={c.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{c.label}</CardTitle>
-              <c.icon className="h-4 w-4 text-muted-foreground" />
+              <c.icon className={`h-5 w-5 ${c.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{c.value}</div>
+              {loading ? (
+                <Skeleton className="h-9 w-20" />
+              ) : (
+                <div className="text-3xl font-bold">{c.value.toLocaleString()}</div>
+              )}
             </CardContent>
           </Card>
         ))}
