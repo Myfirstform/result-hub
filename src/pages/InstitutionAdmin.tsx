@@ -153,18 +153,17 @@ const InstitutionAdmin = () => {
       // we need to either create one or use a default
       console.log("No institution assignment found, checking for institutions...");
       
-      // Get first available institution as fallback
-      const { data: institutions } = await supabase
+      // Get first available institution as fallback (remove status filter)
+      const { data: institutions, error: instError } = await supabase
         .from("institutions")
-        .select("id, status")
-        .or("status.eq.active,status.is.null")
-        .order("created_at", { ascending: false })
+        .select("id, name")
         .limit(1);
       
-      console.log("Available institutions:", institutions);
+      console.log("Institutions query result:", { institutions, instError });
       
       if (institutions && institutions.length > 0) {
         finalInstitutionId = institutions[0].id;
+        console.log("Using fallback institution:", institutions[0]);
         
         // Create the admin assignment
         const { error: createError } = await supabase
@@ -177,14 +176,14 @@ const InstitutionAdmin = () => {
           console.log("Created admin assignment for institution:", finalInstitutionId);
         }
       } else {
-        console.log("No institutions found at all");
+        console.log("No institutions found in database");
       }
     }
     
     if (!finalInstitutionId) {
       toast({ 
         title: "No institution available", 
-        description: "No institutions found. Please create an institution first.", 
+        description: "No institutions found in the system. Please contact the platform administrator to create an institution first.", 
         variant: "destructive" 
       });
       setUploading(false);
