@@ -153,30 +153,72 @@ const InstitutionAdmin = () => {
       // we need to either create one or use a default
       console.log("No institution assignment found, checking for institutions...");
       
-      // Get first available institution as fallback (remove status filter)
-      const { data: institutions, error: instError } = await supabase
+      // Try multiple approaches to find institutions
+      let institutions = null;
+      let instError = null;
+      
+      // Approach 1: Direct query (might be blocked by RLS)
+      const directQuery = await supabase
         .from("institutions")
         .select("id, name")
         .limit(1);
       
-      console.log("Institutions query result:", { institutions, instError });
+      institutions = directQuery.data;
+      instError = directQuery.error;
       
-      if (institutions && institutions.length > 0) {
-        finalInstitutionId = institutions[0].id;
-        console.log("Using fallback institution:", institutions[0]);
-        
-        // Create the admin assignment
-        const { error: createError } = await supabase
-          .from("institution_admins")
-          .insert({ user_id: user.id, institution_id: finalInstitutionId });
-        
-        if (createError) {
-          console.error("Failed to create admin assignment:", createError);
-        } else {
-          console.log("Created admin assignment for institution:", finalInstitutionId);
+      console.log("Direct query result:", { institutions, instError });
+      
+      // Approach 2: If RLS blocked, try RPC (if available)
+      if (!institutions || institutions.length === 0) {
+        console.log("Direct query failed, trying RPC...");
+        try {
+          const rpcQuery = await supabase
+            .rpc('get_all_institutions_for_super_admin');
+          
+          console.log("RPC query result:", { data: rpcQuery.data, error: rpcQuery.error });
+          
+          if (rpcQuery.data && rpcQuery.data.length > 0) {
+            institutions = rpcQuery.data;
+          }
+        } catch (rpcError) {
+          console.log("RPC not available or failed:", rpcError);
         }
+      }
+      
+      // Approach 3: If all else fails, show a helpful error
+      if (!institutions || institutions.length === 0) {
+        console.log("All approaches failed, showing error");
+        toast({ 
+          title: "No institution access", 
+          description: "You have admin role but no institution assignment. Please contact a super admin to assign you to an institution.", 
+          variant: "destructive" 
+        });
+        setUploading(false);
+        return;
+      }
+      
+      // Use the first institution found
+      finalInstitutionId = institutions[0].id;
+      console.log("Using institution:", institutions[0]);
+      
+      // Create admin assignment
+      const { error: createError } = await supabase
+        .from("institution_admins")
+        .insert({ user_id: user.id, institution_id: finalInstitutionId });
+      
+      if (createError) {
+        console.error("Failed to create admin assignment:", createError);
+        toast({ 
+          title: "Assignment failed", 
+          description: "Could not assign you to institution. Please contact admin.", 
+          variant: "destructive" 
+        });
       } else {
-        console.log("No institutions found in database");
+        console.log("Created admin assignment for institution:", finalInstitutionId);
+        toast({ 
+          title: "Institution assigned", 
+          description: "You have been assigned to an institution. Please refresh the page.", 
+        });
       }
     }
     
