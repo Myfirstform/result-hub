@@ -12,17 +12,18 @@ import { Input } from "@/components/ui/input";
 
 import { Label } from "@/components/ui/label";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { Badge } from "@/components/ui/badge";
+
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Pencil } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw } from "lucide-react";
 
 import * as XLSX from "xlsx";
 
@@ -317,149 +318,310 @@ const InstitutionAdmin = () => {
 
 
   return (
-
     <AdminLayout>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Student Results</h1>
-          {!loading && <Badge variant="secondary" className="ml-1">{results.length}</Badge>}
-        </div>
-        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-
-          <DialogTrigger asChild>
-
-            <Button className="gap-2"><Upload className="h-4 w-4" />Upload CSV/Excel</Button>
-
-          </DialogTrigger>
-
-          <DialogContent className="max-w-2xl">
-
-            <DialogHeader>
-  <DialogTitle>Upload Results</DialogTitle>
-  <DialogDescription>
-    Upload a CSV or Excel file with student results. Required columns: register_number, secret_code, student_name.
-  </DialogDescription>
-</DialogHeader>
-
-            <div className="space-y-4">
-              <Input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
-
-              {previewData && (
-
-                <>
-
-                  <p className="text-sm font-medium">{previewData.length} rows found. Preview:</p>
-                  <div className="max-h-60 overflow-auto border rounded-lg">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {Object.keys(previewData[0] || {}).map((k) => (
-                            <TableHead key={k} className="text-xs whitespace-nowrap">{k}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {previewData.slice(0, 5).map((row, i) => (
-                          <TableRow key={i}>
-                            {Object.values(row).map((v, j) => (
-                              <TableCell key={j} className="text-xs">{String(v)}</TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  <Button onClick={handleBulkInsert} disabled={uploading} className="w-full">
-
-                    {uploading ? "Uploading..." : `Upload ${previewData.length} Results`}
-
-                  </Button>
-
-                </>
-
-              )}
-
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        {/* Header Section */}
+        <div className="bg-white border-b border-slate-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
+                  <FileSpreadsheet className="h-6 w-6" style={{ color: 'rgba(62, 45, 116)' }} />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900">Student Results</h1>
+                  <p className="text-sm text-slate-600 mt-1">Manage and track student academic performance</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg">
+                  <Users className="h-4 w-4 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">
+                    {!loading && `${results.length} Results`}
+                  </span>
+                </div>
+                <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                      style={{ backgroundColor: 'rgba(62, 45, 116)' }}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload Results
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl border-0 shadow-2xl">
+                    <DialogHeader className="pb-4">
+                      <DialogTitle className="text-xl font-semibold text-slate-900">Upload Student Results</DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Upload a CSV or Excel file with student results. Required columns: register_number, secret_code, student_name.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
+                        <Input 
+                          ref={fileRef} 
+                          type="file" 
+                          accept=".csv,.xlsx,.xls" 
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <FileSpreadsheet className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+                        <p className="text-sm text-slate-600 mb-2">Drop your file here or click to browse</p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => fileRef.current?.click()}
+                          className="text-slate-700 border-slate-300 hover:bg-slate-50"
+                        >
+                          Choose File
+                        </Button>
+                      </div>
+                      
+                      {previewData && (
+                        <>
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                            <p className="text-sm font-medium text-emerald-800">
+                              {previewData.length} rows found. Preview:
+                            </p>
+                          </div>
+                          <div className="max-h-60 overflow-auto border border-slate-200 rounded-lg">
+                            <Table>
+                              <TableHeader className="bg-slate-50">
+                                <TableRow>
+                                  {Object.keys(previewData[0] || {}).map((k) => (
+                                    <TableHead key={k} className="text-xs font-semibold text-slate-700 whitespace-nowrap px-3 py-2">
+                                      {k}
+                                    </TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {previewData.slice(0, 5).map((row, i) => (
+                                  <TableRow key={i} className="border-b border-slate-100">
+                                    {Object.values(row).map((v, j) => (
+                                      <TableCell key={j} className="text-xs text-slate-600 px-3 py-2">
+                                        {String(v)}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                          <Button 
+                            onClick={handleBulkInsert} 
+                            disabled={uploading} 
+                            className="w-full py-3 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                            style={{ backgroundColor: 'rgba(62, 45, 116)' }}
+                          >
+                            {uploading ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload {previewData.length} Results
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
-
-          </DialogContent>
-
-        </Dialog>
-      </div>
-
-
-
-      <div className="mb-4 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or register number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 max-w-sm"
-        />
-      </div>
-
-
-
-      <Card>
-
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Register No.</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Class</TableHead>
-                  <TableHead className="hidden sm:table-cell">Total</TableHead>
-                  <TableHead className="hidden md:table-cell">Grade</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
-                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-12" /></TableCell>
-                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No results found</TableCell></TableRow>
-                ) : filtered.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-mono text-sm">{r.register_number}</TableCell>
-                    <TableCell className="font-medium">{r.student_name}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{r.class || "—"}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{r.total ?? "—"}</TableCell>
-                    <TableCell className="hidden md:table-cell">{r.grade || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={r.published ? "default" : "secondary"} className="text-xs">
-                        {r.published ? "Published" : "Draft"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => togglePublish(r.id, r.published)} title={r.published ? "Unpublish" : "Publish"}>
-                        {r.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} title="Delete">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Total Results</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">{results.length}</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
+                    <FileSpreadsheet className="h-6 w-6" style={{ color: 'rgba(62, 45, 116)' }} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Published</p>
+                    <p className="text-2xl font-bold text-emerald-600 mt-1">
+                      {results.filter(r => r.published).length}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-emerald-50">
+                    <Eye className="h-6 w-6 text-emerald-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Drafts</p>
+                    <p className="text-2xl font-bold text-amber-600 mt-1">
+                      {results.filter(r => !r.published).length}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-amber-50">
+                    <EyeOff className="h-6 w-6 text-amber-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search by name or register number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 rounded-lg"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="gap-2 border-slate-300 hover:bg-slate-50">
+                  <Filter className="h-4 w-4" />
+                  Filter
+                </Button>
+                <Button variant="outline" className="gap-2 border-slate-300 hover:bg-slate-50">
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Table */}
+          <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+              <CardTitle className="text-lg font-semibold text-slate-900">Student Results</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50 border-b border-slate-200">
+                    <TableRow>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Register No.</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Student Name</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Class</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Total</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Grade</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Status</TableHead>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-200">
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="px-4 py-4"><Skeleton className="h-5 w-24" /></TableCell>
+                          <TableCell className="px-4 py-4"><Skeleton className="h-5 w-32" /></TableCell>
+                          <TableCell className="px-4 py-4 hidden sm:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell className="px-4 py-4 hidden sm:table-cell"><Skeleton className="h-5 w-12" /></TableCell>
+                          <TableCell className="px-4 py-4 hidden md:table-cell"><Skeleton className="h-5 w-10" /></TableCell>
+                          <TableCell className="px-4 py-4"><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell className="px-4 py-4 text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : filtered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="px-4 py-12 text-center">
+                          <div className="flex flex-col items-center">
+                            <FileSpreadsheet className="h-12 w-12 text-slate-300 mb-3" />
+                            <p className="text-slate-600 font-medium">No results found</p>
+                            <p className="text-slate-500 text-sm mt-1">Upload your first batch of student results to get started</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filtered.map((r) => (
+                      <TableRow key={r.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell className="px-4 py-4">
+                          <span className="font-mono text-sm font-medium text-slate-900">
+                            {r.register_number}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <div className="flex items-center">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center mr-3">
+                              <span className="text-xs font-medium text-slate-600">
+                                {r.student_name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <span className="font-medium text-slate-900">{r.student_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 hidden sm:table-cell">
+                          <span className="text-sm text-slate-600">{r.class || "—"}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 hidden sm:table-cell">
+                          <span className="text-sm font-medium text-slate-900">{r.total ?? "—"}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 hidden md:table-cell">
+                          <span className="text-sm text-slate-600">{r.grade || "—"}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <Badge 
+                            variant={r.published ? "default" : "secondary"} 
+                            className={`text-xs font-medium px-2 py-1 rounded-full ${
+                              r.published 
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                                : 'bg-amber-100 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {r.published ? "Published" : "Draft"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => togglePublish(r.id, r.published)} 
+                              className="h-8 w-8 p-0 hover:bg-slate-100"
+                              title={r.published ? "Unpublish" : "Publish"}
+                            >
+                              {r.published ? <EyeOff className="h-4 w-4 text-slate-600" /> : <Eye className="h-4 w-4 text-slate-600" />}
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDelete(r.id)} 
+                              className="h-8 w-8 p-0 hover:bg-red-50"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </AdminLayout>
   );
 };
