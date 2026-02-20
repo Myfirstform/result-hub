@@ -156,9 +156,12 @@ const InstitutionAdmin = () => {
       // Get first available institution as fallback
       const { data: institutions } = await supabase
         .from("institutions")
-        .select("id")
-        .eq("status", "active")
+        .select("id, status")
+        .or("status.eq.active,status.is.null")
+        .order("created_at", { ascending: false })
         .limit(1);
+      
+      console.log("Available institutions:", institutions);
       
       if (institutions && institutions.length > 0) {
         finalInstitutionId = institutions[0].id;
@@ -173,13 +176,15 @@ const InstitutionAdmin = () => {
         } else {
           console.log("Created admin assignment for institution:", finalInstitutionId);
         }
+      } else {
+        console.log("No institutions found at all");
       }
     }
     
     if (!finalInstitutionId) {
       toast({ 
         title: "No institution available", 
-        description: "No active institutions found. Please contact the platform administrator.", 
+        description: "No institutions found. Please create an institution first.", 
         variant: "destructive" 
       });
       setUploading(false);
