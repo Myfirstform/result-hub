@@ -22,7 +22,8 @@ const SuperAdmin = () => {
   const [form, setForm] = useState({ name: "", slug: "", contact_email: "", contact_phone: "", footer_message: "", admin_email: "", admin_password: "" });
 
   const fetchInstitutions = async () => {
-    const { data } = await supabase.from("institutions").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("institutions").select("*").order("created_at", { ascending: false });
+    console.log("fetchInstitutions result:", { data, error });
     setInstitutions(data || []);
     setLoading(false);
   };
@@ -50,14 +51,28 @@ const SuperAdmin = () => {
       toast({ title: "Institution updated" });
     } else {
       const { data: inst, error } = await supabase.from("institutions").insert({
-        name: form.name, slug: form.slug, contact_email: form.contact_email,
-        contact_phone: form.contact_phone, footer_message: form.footer_message,
+        name: form.name, 
+        slug: form.slug, 
+        contact_email: form.contact_email,
+        contact_phone: form.contact_phone, 
+        footer_message: form.footer_message,
+        status: "active", // Explicitly set status
       }).select().single();
 
-      if (error) { toast({ title: "Creation failed", description: error.message, variant: "destructive" }); return; }
+      console.log("Institution creation result:", { inst, error });
+
+      if (error) { 
+        toast({ title: "Creation failed", description: error.message, variant: "destructive" }); 
+        return; 
+      }
+
+      if (!inst) {
+        toast({ title: "Creation failed", description: "No institution data returned", variant: "destructive" });
+        return;
+      }
 
       // Create admin user if email provided
-      if (form.admin_email && form.admin_password && inst) {
+      if (form.admin_email && form.admin_password) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: form.admin_email, password: form.admin_password,
         });
@@ -69,7 +84,7 @@ const SuperAdmin = () => {
           toast({ title: "Institution & admin created" });
         }
       } else {
-        toast({ title: "Institution created" });
+        toast({ title: "Institution created successfully" });
       }
     }
 
