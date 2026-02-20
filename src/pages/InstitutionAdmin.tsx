@@ -29,33 +29,23 @@ import * as XLSX from "xlsx";
 
 
 interface StudentResult {
-
   id: string;
-
   register_number: string;
-
   secret_code: string;
-
   student_name: string;
-
   class: string | null;
-
   subjects: any;
-
   total: number | null;
-
   grade: string | null;
-
   rank: string | null;
-
   published: boolean;
-
+  created_by: string; // Track which admin uploaded the data
 }
 
 
 
 const InstitutionAdmin = () => {
-  const { institutionId } = useAuth();
+  const { institutionId, user } = useAuth();
 
   const [results, setResults] = useState<StudentResult[]>([]);
 
@@ -74,28 +64,22 @@ const InstitutionAdmin = () => {
 
 
   const fetchResults = async () => {
-
     if (!institutionId) return;
 
     const { data } = await supabase
-
       .from("student_results")
-
       .select("*")
-
       .eq("institution_id", institutionId)
-
+      .eq("created_by", user?.id) // Only show results uploaded by current admin
       .order("created_at", { ascending: false });
 
     setResults((data as StudentResult[]) || []);
-
     setLoading(false);
-
   };
 
 
 
-  useEffect(() => { fetchResults(); }, [institutionId]);
+  useEffect(() => { fetchResults(); }, [institutionId, user]);
 
 
 
@@ -168,22 +152,22 @@ const InstitutionAdmin = () => {
       
       console.log("Direct query result:", { institutions, instError });
       
-      // Approach 2: If RLS blocked, try RPC (if available)
-      if (!institutions || institutions.length === 0) {
-        console.log("Direct query failed, trying RPC...");
-        try {
-          const rpcQuery = await supabase
-            .rpc('get_all_institutions_for_super_admin');
+      // Approach 2: Skip RPC for now since it may not exist
+      // if (!institutions || institutions.length === 0) {
+      //   console.log("Direct query failed, trying RPC...");
+      //   try {
+      //     const rpcQuery = await supabase
+      //       .rpc('get_all_institutions_for_super_admin');
           
-          console.log("RPC query result:", { data: rpcQuery.data, error: rpcQuery.error });
+      //     console.log("RPC query result:", { data: rpcQuery.data, error: rpcQuery.error });
           
-          if (rpcQuery.data && rpcQuery.data.length > 0) {
-            institutions = rpcQuery.data;
-          }
-        } catch (rpcError) {
-          console.log("RPC not available or failed:", rpcError);
-        }
-      }
+      //     if (rpcQuery.data && rpcQuery.data.length > 0) {
+      //       institutions = rpcQuery.data;
+      //     }
+      //   } catch (rpcError) {
+      //     console.log("RPC not available or failed:", rpcError);
+      //   }
+      // }
       
       // Approach 3: If all else fails, show a helpful error
       if (!institutions || institutions.length === 0) {
@@ -248,39 +232,22 @@ const InstitutionAdmin = () => {
 
         ...subjectFields } = row;
 
-
-
       const subjects = Object.entries(subjectFields).map(([name, marks]) => ({ name, marks: Number(marks) || 0 }));
 
-
-
       return {
-
         institution_id: finalInstitutionId,
-
+        created_by: user.id, // Track which admin uploaded this data
         register_number: String(register_number || RegisterNumber || regNum || ""),
-
         secret_code: String(secret_code || SecretCode || secCode || ""),
-
         student_name: String(student_name || StudentName || stuName || ""),
-
         class: String(cls || cls2 || ""),
-
         subjects,
-
         total: Number(total || Total) || null,
-
         grade: String(grade || Grade || ""),
-
         rank: String(rank || Rank || ""),
-
         published: false,
-
       };
-
     }).filter((r) => r.register_number && r.student_name);
-
-
 
     if (rows.length === 0) {
 
