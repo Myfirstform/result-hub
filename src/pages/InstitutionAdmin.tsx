@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, Image, Camera, ImageIcon, X } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X } from "lucide-react";
 
 import * as XLSX from "xlsx";
 
@@ -61,35 +61,6 @@ const InstitutionAdmin = () => {
   const [uploading, setUploading] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const logoRef = useRef<HTMLInputElement>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-
-  // Logo upload states
-  const [logoDialogOpen, setLogoDialogOpen] = useState(false);
-  const [currentLogo, setCurrentLogo] = useState<string | null>(null);
-  const [logoUploading, setLogoUploading] = useState(false);
-  const logoFileRef = useRef<HTMLInputElement>(null);
-
-  const fetchLogoUrl = async () => {
-    if (!institutionId) return;
-    const { data } = await supabase
-      .from("institutions")
-      .select("logo_url")
-      .eq("id", institutionId)
-      .maybeSingle();
-    if (data) setLogoUrl(data.logo_url);
-  };
-
-  const handleLogoDelete = async () => {
-    if (!institutionId) return;
-    setUploadingLogo(true);
-    await supabase.storage.from("institution-logos").remove([`${institutionId}/logo.png`]);
-    await supabase.from("institutions").update({ logo_url: null }).eq("id", institutionId);
-    setLogoUrl(null);
-    toast({ title: "Logo removed" });
-    setUploadingLogo(false);
-  };
 
   const fetchResults = async () => {
     if (!institutionId) return;
@@ -107,155 +78,7 @@ const InstitutionAdmin = () => {
 
 
 
-  useEffect(() => { fetchResults(); fetchLogoUrl(); }, [institutionId, user]);
-
-  // Fetch current institution logo
-  useEffect(() => {
-    const fetchInstitutionLogo = async () => {
-      if (!institutionId) return;
-      
-      try {
-        console.log("Fetching logo for institution:", institutionId);
-        
-        const { data, error } = await supabase
-          .from("institutions")
-          .select("logo_url")
-          .eq("id", institutionId)
-          .single();
-        
-        console.log("Logo fetch result:", { data, error });
-        
-        if (error) {
-          console.error("Error fetching logo:", error);
-          // Try fallback query
-          const { data: fallbackData } = await supabase
-            .from("institutions")
-            .select("logo_url")
-            .eq("id", institutionId);
-          
-          if (fallbackData && fallbackData.length > 0) {
-            console.log("Logo fetch fallback success:", fallbackData[0]);
-            setCurrentLogo(fallbackData[0].logo_url);
-          } else {
-            setCurrentLogo(null);
-          }
-        } else {
-          console.log("Logo fetch success:", data.logo_url);
-          setCurrentLogo(data.logo_url);
-        }
-      } catch (err) {
-        console.error("Unexpected error fetching logo:", err);
-        setCurrentLogo(null);
-      }
-    };
-    
-    fetchInstitutionLogo();
-  }, [institutionId]);
-
-  // Logo upload functions
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({ title: "Invalid file type", description: "Please upload an image file", variant: "destructive" });
-      return;
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Please upload an image smaller than 2MB", variant: "destructive" });
-      return;
-    }
-
-    setLogoUploading(true);
-
-    try {
-      console.log("Starting logo upload for institution:", institutionId);
-      
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${institutionId}/logo_${Date.now()}.${fileExt}`;
-
-      // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from('institution-logos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        throw uploadError;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('institution-logos')
-        .getPublicUrl(fileName);
-
-      console.log("Generated public URL:", publicUrl);
-
-      // Update institution with new logo URL
-      const { error: updateError } = await supabase
-        .from("institutions")
-        .update({ logo_url: publicUrl })
-        .eq("id", institutionId);
-
-      if (updateError) {
-        console.error("Database update error:", updateError);
-        throw updateError;
-      }
-
-      console.log("Database update successful");
-      setCurrentLogo(publicUrl);
-      toast({ title: "Logo uploaded successfully", description: "Your institution logo has been updated" });
-      setLogoDialogOpen(false);
-
-    } catch (error: any) {
-      console.error("Logo upload error:", error);
-      toast({ 
-        title: "Upload failed", 
-        description: error.message || "Failed to upload logo. Please try again.", 
-        variant: "destructive" 
-      });
-    } finally {
-      setLogoUploading(false);
-    }
-  };
-
-  const handleLogoRemove = async () => {
-    if (!currentLogo) return;
-
-    try {
-      console.log("Removing logo for institution:", institutionId);
-      
-      // Update institution to remove logo URL
-      const { error } = await supabase
-        .from("institutions")
-        .update({ logo_url: null })
-        .eq("id", institutionId);
-
-      if (error) {
-        console.error("Logo removal error:", error);
-        throw error;
-      }
-
-      console.log("Logo removal successful");
-      setCurrentLogo(null);
-      toast({ title: "Logo removed", description: "Your institution logo has been removed" });
-
-    } catch (error: any) {
-      console.error("Logo removal error:", error);
-      toast({ 
-        title: "Removal failed", 
-        description: error.message || "Failed to remove logo. Please try again.", 
-        variant: "destructive" 
-      });
-    }
-  };
+  useEffect(() => { fetchResults(); }, [institutionId, user?.id]);
 
 
 
@@ -512,120 +335,16 @@ const InstitutionAdmin = () => {
                 <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg">
                   <Users className="h-4 w-4 text-slate-600" />
                   <span className="text-sm font-medium text-slate-700">
-                    {!loading && `${results.length} Results`}
+                    {!loading && results.length > 0 ? `${results.length} Results` : '0 Results'}
                   </span>
                 </div>
-                
-                {/* Logo Upload Button */}
-                <Dialog open={logoDialogOpen} onOpenChange={setLogoDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline"
-                      className="gap-2 px-4 py-2 border-slate-300 hover:bg-slate-50"
-                    >
-                      {currentLogo ? (
-                        <>
-                          <Image className="h-4 w-4" />
-                          Change Logo
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="h-4 w-4" />
-                          Add Logo
-                        </>
-                      )}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md border-0 shadow-2xl">
-                    <DialogHeader className="pb-4">
-                      <DialogTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                        <Image className="h-5 w-5" style={{ color: 'rgba(62, 45, 116)' }} />
-                        Institution Logo
-                      </DialogTitle>
-                      <DialogDescription className="text-slate-600">
-                        Upload your institution logo to display on student result portal
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      {currentLogo && (
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium text-slate-700">Current Logo</Label>
-                          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-                            <img 
-                              src={currentLogo} 
-                              alt="Current logo" 
-                              className="h-16 w-16 rounded-lg object-cover shadow-sm"
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-slate-900">Logo uploaded</p>
-                              <p className="text-xs text-slate-600">This logo appears on student result pages</p>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLogoRemove}
-                              className="text-red-600 border-red-200 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-700">
-                          {currentLogo ? "Upload New Logo" : "Upload Logo"}
-                        </Label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
-                          <Input 
-                            ref={logoFileRef} 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleLogoUpload}
-                            className="hidden"
-                          />
-                          <Image className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-                          <p className="text-sm text-slate-600 mb-2">Drop your logo here or click to browse</p>
-                          <p className="text-xs text-slate-500 mb-3">Recommended: Square image, max 2MB</p>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => logoFileRef.current?.click()}
-                            disabled={logoUploading}
-                            className="text-slate-700 border-slate-300 hover:bg-slate-50"
-                          >
-                            {logoUploading ? (
-                              <>
-                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Camera className="h-4 w-4 mr-2" />
-                                Choose Image
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end gap-3 pt-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setLogoDialogOpen(false)}
-                          className="border-slate-300 hover:bg-slate-50"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
                 
                 <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
                       className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                       style={{ backgroundColor: 'rgba(62, 45, 116)' }}
+// ... (rest of the code remains the same)
                     >
                       <Upload className="h-4 w-4" />
                       Upload Results
@@ -715,39 +434,6 @@ const InstitutionAdmin = () => {
               </div>
             </div>
           </div>
-        </div>
-
-          {/* Logo Upload Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <Card className="border border-slate-200 shadow-sm rounded-lg mb-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Institution Logo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4">
-              {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="h-16 w-16 rounded object-cover border border-slate-200" />
-              ) : (
-                <div className="h-16 w-16 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
-                  No logo
-                </div>
-              )}
-              <div className="flex gap-2">
-                <input ref={logoRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleLogoUpload} />
-                <Button variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={uploadingLogo}>
-                  {uploadingLogo ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
-                  {logoUrl ? "Replace" : "Upload"}
-                </Button>
-                {logoUrl && (
-                  <Button variant="outline" size="sm" onClick={handleLogoDelete} disabled={uploadingLogo}>
-                    <X className="h-3 w-3 mr-1" /> Remove
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
           {/* Stats Cards */}
