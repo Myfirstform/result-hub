@@ -57,7 +57,7 @@ ORDER BY created_at DESC;
 SELECT 
   bucket_id,
   name,
-  public_url
+  created_at
 FROM storage.objects 
 WHERE bucket_id = 'institution-logos'
 LIMIT 5;
