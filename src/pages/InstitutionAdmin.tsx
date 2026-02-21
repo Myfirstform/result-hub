@@ -81,35 +81,6 @@ const InstitutionAdmin = () => {
     if (data) setLogoUrl(data.logo_url);
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !institutionId) return;
-    setUploadingLogo(true);
-    const path = `${institutionId}/logo.png`;
-    const { error: uploadError } = await supabase.storage
-      .from("institution-logos")
-      .upload(path, file, { upsert: true });
-    if (uploadError) {
-      toast({ title: "Logo upload failed", description: uploadError.message, variant: "destructive" });
-      setUploadingLogo(false);
-      return;
-    }
-    const { data: publicUrl } = supabase.storage.from("institution-logos").getPublicUrl(path);
-    const url = publicUrl.publicUrl + "?t=" + Date.now();
-    const { error: updateError } = await supabase
-      .from("institutions")
-      .update({ logo_url: url })
-      .eq("id", institutionId);
-    if (updateError) {
-      toast({ title: "Failed to save logo URL", description: updateError.message, variant: "destructive" });
-    } else {
-      setLogoUrl(url);
-      toast({ title: "Logo uploaded successfully" });
-    }
-    setUploadingLogo(false);
-    if (logoRef.current) logoRef.current.value = "";
-  };
-
   const handleLogoDelete = async () => {
     if (!institutionId) return;
     setUploadingLogo(true);
