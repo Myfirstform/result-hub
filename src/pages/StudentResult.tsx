@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download } from "lucide-react";
+import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown } from "lucide-react";
 
 interface InstitutionInfo {
   id: string;
@@ -128,31 +128,57 @@ const StudentResult = () => {
 
   if (loadingInst) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-        <header className="bg-white border-b border-slate-200 shadow-sm py-6">
-          <div className="mx-auto max-w-4xl px-4 flex items-center gap-4">
-            <Skeleton className="h-12 w-12 rounded-xl" />
-            <Skeleton className="h-8 w-64 rounded-lg" />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col">
+        <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-8">
+          <div className="mx-auto max-w-6xl px-4 flex items-center gap-6">
+            <div className="relative">
+              <Skeleton className="h-16 w-16 rounded-2xl" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-20 blur-xl"></div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-80 rounded-xl" />
+              <Skeleton className="h-5 w-40 rounded-lg" />
+            </div>
           </div>
         </header>
-        <main className="flex-1 flex items-start justify-center py-12 px-4">
-          <div className="w-full max-w-4xl space-y-6">
-            <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-                <Skeleton className="h-6 w-48 rounded-lg" />
-              </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24 rounded" />
-                    <Skeleton className="h-11 w-full rounded-lg" />
+        <main className="flex-1 flex items-center justify-center py-16 px-4">
+          <div className="w-full max-w-5xl space-y-8">
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-slate-200/50 shadow-lg">
+                <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                <span className="text-sm font-medium text-slate-700">Loading Portal...</span>
+              </div>
+            </div>
+            <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <Search className="h-6 w-6 text-white" />
                   </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20 rounded" />
-                    <Skeleton className="h-11 w-full rounded-lg" />
+                  <div>
+                    <Skeleton className="h-7 w-48 rounded-xl bg-white/20" />
+                    <Skeleton className="h-4 w-64 rounded-lg bg-white/10 mt-2" />
                   </div>
                 </div>
-                <Skeleton className="h-12 w-full rounded-lg" />
+              </CardHeader>
+              <CardContent className="p-10 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <Skeleton className="h-5 w-32 rounded-lg" />
+                    <div className="relative">
+                      <Skeleton className="h-14 w-full rounded-2xl" />
+                      <Skeleton className="h-5 w-5 rounded-lg absolute left-4 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Skeleton className="h-5 w-28 rounded-lg" />
+                    <div className="relative">
+                      <Skeleton className="h-14 w-full rounded-2xl" />
+                      <Skeleton className="h-5 w-5 rounded-lg absolute left-4 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+                </div>
+                <Skeleton className="h-16 w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600" />
               </CardContent>
             </Card>
           </div>
@@ -163,25 +189,31 @@ const StudentResult = () => {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
-        <Card className="w-full max-w-lg border-0 shadow-2xl rounded-2xl overflow-hidden">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="mx-auto p-4 rounded-2xl bg-red-50 w-20 h-20 flex items-center justify-center">
-              <SearchX className="h-10 w-10 text-red-600" />
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <Card className="w-full max-w-2xl border-0 shadow-2xl rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative">
+          <CardContent className="p-12 text-center space-y-8">
+            <div className="relative">
+              <div className="mx-auto p-6 rounded-3xl bg-gradient-to-br from-red-500 to-orange-600 w-24 h-24 flex items-center justify-center shadow-2xl">
+                <SearchX className="h-12 w-12 text-white" />
+              </div>
+              <div className="absolute -inset-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-3xl opacity-20 blur-2xl"></div>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-slate-900">Institution Not Found</h2>
-              <p className="text-slate-600 leading-relaxed">
-                The institution <span className="font-mono bg-slate-100 px-2 py-1 rounded text-sm">{slug}</span> does not exist or is inactive.
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Institution Not Found</h2>
+              <p className="text-slate-600 leading-relaxed text-lg max-w-md mx-auto">
+                The institution <span className="font-mono bg-red-50 px-3 py-2 rounded-xl text-red-600 font-semibold border border-red-200">{slug}</span> does not exist or is inactive.
               </p>
             </div>
-            <Button 
-              onClick={() => window.location.href = '/'}
-              className="px-6 py-3 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-              style={{ backgroundColor: 'rgba(62, 45, 116)' }}
-            >
-              Go to Homepage
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={() => window.location.href = '/'}
+                className="px-8 py-4 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              >
+                <GraduationCap className="h-5 w-5 mr-2" />
+                Go to Homepage
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -189,57 +221,79 @@ const StudentResult = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col relative">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 shadow-sm py-6 print:border-0">
-        <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-3">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-8 print:border-0 relative">
+        <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-4">
           {institution?.logo_url && (
-            <img src={institution.logo_url} alt={institution.name} className="max-w-[120px] h-auto object-contain" />
+            <div className="relative">
+              <img src={institution.logo_url} alt={institution.name} className="max-w-[140px] h-auto object-contain drop-shadow-lg" />
+              <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-10 blur-xl"></div>
+            </div>
           )}
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">{institution?.name}</h1>
-            <p className="text-sm text-slate-600 mt-1">Student Result Portal</p>
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{institution?.name}</h1>
+            <div className="flex items-center gap-2 justify-center">
+              <Sparkles className="h-4 w-4 text-indigo-500" />
+              <p className="text-lg text-slate-600 font-medium">Student Result Portal</p>
+              <Sparkles className="h-4 w-4 text-purple-500" />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-start justify-center py-12 px-4">
-        <div className="w-full max-w-4xl space-y-8">
+      <main className="flex-1 flex items-center justify-center py-16 px-4 relative">
+        <div className="w-full max-w-6xl space-y-10">
           {!result ? (
-            <div className="space-y-8">
+            <div className="space-y-10">
               {/* Search Card */}
-              <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-8">
-                  <div className="text-center space-y-3">
-                    <div className="mx-auto p-3 rounded-2xl" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
-                      <Search className="h-8 w-8" style={{ color: 'rgba(62, 45, 116)' }} />
+              <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-10">
+                  <div className="text-center space-y-6">
+                    <div className="relative inline-flex items-center justify-center">
+                      <div className="p-4 rounded-3xl bg-white/20 backdrop-blur-sm shadow-2xl">
+                        <Search className="h-10 w-10 text-white" />
+                      </div>
+                      <div className="absolute -inset-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
                     </div>
-                    <CardTitle className="text-2xl font-bold text-slate-900">Check Your Result</CardTitle>
-                    <p className="text-slate-600">Enter your register number and secret code to view your academic results</p>
+                    <div className="space-y-3">
+                      <CardTitle className="text-3xl font-bold text-white">Check Your Result</CardTitle>
+                      <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed">
+                        Enter your register number and secret code to view your academic performance
+                      </p>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-8">
-                  <form onSubmit={handleSearch} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="regNumber" className="text-sm font-medium text-slate-700">Register Number</Label>
-                        <div className="relative">
-                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <CardContent className="p-10">
+                  <form onSubmit={handleSearch} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label htmlFor="regNumber" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <Users className="h-4 w-4 text-indigo-600" />
+                          Register Number
+                        </Label>
+                        <div className="relative group">
+                          <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                           <Input 
                             id="regNumber"
                             value={regNumber} 
                             onChange={(e) => setRegNumber(e.target.value)} 
                             required 
                             placeholder="Enter your register number"
-                            className="pl-10 h-11 border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 rounded-lg"
+                            className="pl-12 h-14 border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 rounded-2xl text-lg bg-white/80 backdrop-blur-sm transition-all duration-300"
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="secretCode" className="text-sm font-medium text-slate-700">Secret Code</Label>
-                        <div className="relative">
-                          <Award className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <div className="space-y-3">
+                        <Label htmlFor="secretCode" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <Award className="h-4 w-4 text-purple-600" />
+                          Secret Code
+                        </Label>
+                        <div className="relative group">
+                          <Award className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
                           <Input 
                             id="secretCode"
                             type="password"
@@ -247,26 +301,25 @@ const StudentResult = () => {
                             onChange={(e) => setSecretCode(e.target.value)} 
                             required 
                             placeholder="Enter your secret code"
-                            className="pl-10 h-11 border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 rounded-lg"
+                            className="pl-12 h-14 border-slate-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 rounded-2xl text-lg bg-white/80 backdrop-blur-sm transition-all duration-300"
                           />
                         </div>
                       </div>
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full h-12 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                      className="w-full h-16 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02]"
                       disabled={searching}
-                      style={{ backgroundColor: 'rgba(62, 45, 116)' }}
                     >
                       {searching ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Searching...
+                          <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                          Searching Results...
                         </>
                       ) : (
                         <>
-                          <Search className="h-4 w-4 mr-2" />
-                          View Result
+                          <Search className="h-5 w-5 mr-3" />
+                          View My Result
                         </>
                       )}
                     </Button>
@@ -275,40 +328,51 @@ const StudentResult = () => {
               </Card>
 
               {/* Instructions Card */}
-              <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200">
-                  <CardTitle className="text-lg font-semibold text-emerald-900 flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+              <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 border-b border-slate-200/50">
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                      <CheckCircle className="h-6 w-6 text-white" />
+                    </div>
                     How to Check Your Result
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center space-y-3">
-                      <div className="mx-auto p-3 rounded-full bg-emerald-100 w-12 h-12 flex items-center justify-center">
-                        <span className="text-emerald-600 font-bold text-lg">1</span>
+                <CardContent className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="text-center space-y-4 group">
+                      <div className="relative">
+                        <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                          <span className="text-emerald-600 font-bold text-2xl">1</span>
+                        </div>
+                        <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-300"></div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">Enter Register Number</h3>
-                        <p className="text-sm text-slate-600 mt-1">Your unique student identification number</p>
-                      </div>
-                    </div>
-                    <div className="text-center space-y-3">
-                      <div className="mx-auto p-3 rounded-full bg-emerald-100 w-12 h-12 flex items-center justify-center">
-                        <span className="text-emerald-600 font-bold text-lg">2</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">Enter Secret Code</h3>
-                        <p className="text-sm text-slate-600 mt-1">Your confidential access code provided by institution</p>
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-slate-900 text-lg">Enter Register Number</h3>
+                        <p className="text-slate-600 leading-relaxed">Your unique student identification number</p>
                       </div>
                     </div>
-                    <div className="text-center space-y-3">
-                      <div className="mx-auto p-3 rounded-full bg-emerald-100 w-12 h-12 flex items-center justify-center">
-                        <span className="text-emerald-600 font-bold text-lg">3</span>
+                    <div className="text-center space-y-4 group">
+                      <div className="relative">
+                        <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                          <span className="text-emerald-600 font-bold text-2xl">2</span>
+                        </div>
+                        <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-300"></div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">View Results</h3>
-                        <p className="text-sm text-slate-600 mt-1">Instantly access your academic performance</p>
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-slate-900 text-lg">Enter Secret Code</h3>
+                        <p className="text-slate-600 leading-relaxed">Your confidential access code provided by institution</p>
+                      </div>
+                    </div>
+                    <div className="text-center space-y-4 group">
+                      <div className="relative">
+                        <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                          <span className="text-emerald-600 font-bold text-2xl">3</span>
+                        </div>
+                        <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-300"></div>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-slate-900 text-lg">View Results</h3>
+                        <p className="text-slate-600 leading-relaxed">Instantly access your academic performance</p>
                       </div>
                     </div>
                   </div>
@@ -316,57 +380,82 @@ const StudentResult = () => {
               </Card>
             </div>
           ) : (
-            <div className="space-y-6 print:space-y-4" id="result-card">
+            <div className="space-y-8 print:space-y-4" id="result-card">
               {/* Result Header Card */}
-              <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-8">
-                  <div className="text-center space-y-4">
-                    <div className="flex flex-col items-center gap-3">
+              <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-10">
+                  <div className="text-center space-y-6">
+                    <div className="flex flex-col items-center gap-4">
                       {institution?.logo_url && (
-                        <img src={institution.logo_url} alt="" className="max-w-[120px] h-auto object-contain" />
+                        <div className="relative">
+                          <img src={institution.logo_url} alt="" className="max-w-[140px] h-auto object-contain drop-shadow-lg" />
+                          <div className="absolute -inset-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl opacity-20 blur-2xl"></div>
+                        </div>
                       )}
+                      <div className="relative inline-flex items-center justify-center">
+                        <div className="p-4 rounded-3xl bg-white/20 backdrop-blur-sm shadow-2xl">
+                          <Trophy className="h-12 w-12 text-yellow-300" />
+                        </div>
+                        <div className="absolute -inset-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl opacity-20 blur-2xl animate-pulse"></div>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-2xl font-bold text-slate-900">{institution?.name}</CardTitle>
-                      <p className="text-xl font-semibold text-slate-800 mt-3">{result.student_name}</p>
-                      <div className="flex justify-center gap-8 text-sm text-slate-600 mt-2">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          Reg: <span className="font-mono font-medium">{result.register_number}</span>
-                        </span>
+                    <div className="space-y-4">
+                      <CardTitle className="text-3xl font-bold text-white">{institution?.name}</CardTitle>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/30">
+                        <h2 className="text-2xl font-bold text-white">{result.student_name}</h2>
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-6 text-white/90">
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20">
+                          <Users className="h-5 w-5" />
+                          <span className="font-medium">Reg: <span className="font-mono font-bold">{result.register_number}</span></span>
+                        </div>
                         {result.class && (
-                          <span className="flex items-center gap-1">
-                            <Award className="h-4 w-4" />
-                            Class: {result.class}
-                          </span>
+                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20">
+                            <BookOpen className="h-5 w-5" />
+                            <span className="font-medium">Class: {result.class}</span>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-8">
+                <CardContent className="p-10 space-y-10">
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
                     <div className="space-y-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <TrendingUp className="h-5 w-5 text-slate-600" />
-                        <h3 className="text-lg font-semibold text-slate-900">Subject-wise Performance</h3>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+                          <BarChart3 className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900">Subject-wise Performance</h3>
                       </div>
-                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
                         <Table>
-                          <TableHeader className="bg-slate-50 border-b border-slate-200">
+                          <TableHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
                             <TableRow>
-                              <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Subject</TableHead>
-                              <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 text-right">Marks Obtained</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-6 py-4">Subject</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-6 py-4 text-right">Marks Obtained</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody className="divide-y divide-slate-200">
                             {result.subjects.map((s: any, i: number) => (
-                              <TableRow key={i} className="hover:bg-slate-50 transition-colors">
-                                <TableCell className="px-4 py-4 font-medium text-slate-900">{s.name}</TableCell>
-                                <TableCell className="px-4 py-4 text-right">
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
-                                    {s.marks}
-                                  </span>
+                              <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
+                                <TableCell className="px-6 py-5">
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-colors">
+                                      <BookOpen className="h-4 w-4 text-indigo-600" />
+                                    </div>
+                                    <span className="font-semibold text-slate-900 text-lg">{s.name}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <div className="relative">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+                                      <span className="relative inline-flex items-center px-4 py-2 rounded-full text-lg font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                                        {s.marks}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -376,37 +465,46 @@ const StudentResult = () => {
                     </div>
                   )}
                   
-                  <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-200 pt-8">
+                  <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-slate-200 pt-10">
                     {result.total != null && (
-                      <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
-                        <CardContent className="p-6 text-center">
-                          <div className="mx-auto p-3 rounded-xl bg-blue-50 w-12 h-12 flex items-center justify-center mb-3">
-                            <TrendingUp className="h-6 w-6 text-blue-600" />
+                      <Card className="border-0 shadow-xl rounded-3xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 group hover:shadow-2xl transition-all duration-300">
+                        <CardContent className="p-8 text-center">
+                          <div className="relative mb-4">
+                            <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                              <BarChart3 className="h-8 w-8 text-white" />
+                            </div>
+                            <div className="absolute -inset-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl opacity-20 blur-xl"></div>
                           </div>
-                          <p className="text-sm font-medium text-slate-600 mb-1">Total Marks</p>
-                          <p className="text-3xl font-bold text-slate-900">{result.total}</p>
+                          <p className="text-sm font-semibold text-slate-600 mb-2">Total Marks</p>
+                          <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{result.total}</p>
                         </CardContent>
                       </Card>
                     )}
                     {result.grade && (
-                      <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
-                        <CardContent className="p-6 text-center">
-                          <div className="mx-auto p-3 rounded-xl bg-emerald-50 w-12 h-12 flex items-center justify-center mb-3">
-                            <Award className="h-6 w-6 text-emerald-600" />
+                      <Card className="border-0 shadow-xl rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 group hover:shadow-2xl transition-all duration-300">
+                        <CardContent className="p-8 text-center">
+                          <div className="relative mb-4">
+                            <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                              <Award className="h-8 w-8 text-white" />
+                            </div>
+                            <div className="absolute -inset-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl opacity-20 blur-xl"></div>
                           </div>
-                          <p className="text-sm font-medium text-slate-600 mb-1">Grade</p>
-                          <p className="text-3xl font-bold text-emerald-600">{result.grade}</p>
+                          <p className="text-sm font-semibold text-slate-600 mb-2">Grade</p>
+                          <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{result.grade}</p>
                         </CardContent>
                       </Card>
                     )}
                     {result.rank && (
-                      <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
-                        <CardContent className="p-6 text-center">
-                          <div className="mx-auto p-3 rounded-xl bg-amber-50 w-12 h-12 flex items-center justify-center mb-3">
-                            <Users className="h-6 w-6 text-amber-600" />
+                      <Card className="border-0 shadow-xl rounded-3xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 group hover:shadow-2xl transition-all duration-300">
+                        <CardContent className="p-8 text-center">
+                          <div className="relative mb-4">
+                            <div className="mx-auto p-4 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                              <Crown className="h-8 w-8 text-white" />
+                            </div>
+                            <div className="absolute -inset-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl opacity-20 blur-xl"></div>
                           </div>
-                          <p className="text-sm font-medium text-slate-600 mb-1">Rank</p>
-                          <p className="text-3xl font-bold text-amber-600">{result.rank}</p>
+                          <p className="text-sm font-semibold text-slate-600 mb-2">Rank</p>
+                          <p className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{result.rank}</p>
                         </CardContent>
                       </Card>
                     )}
@@ -415,21 +513,21 @@ const StudentResult = () => {
               </Card>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 print:hidden">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center print:hidden">
                 <Button 
                   onClick={() => window.print()} 
                   variant="outline" 
-                  className="gap-2 h-12 px-6 border-slate-300 hover:bg-slate-50"
+                  className="gap-3 h-14 px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-2xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
-                  <Printer className="h-4 w-4" />
+                  <Printer className="h-5 w-5" />
                   Print Result
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setResult(null)} 
-                  className="gap-2 h-12 px-6 border-slate-300 hover:bg-slate-50"
+                  className="gap-3 h-14 px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-2xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-5 w-5" />
                   Search Another Result
                 </Button>
               </div>
@@ -440,8 +538,15 @@ const StudentResult = () => {
 
       {/* Footer */}
       {institution?.footer_message && (
-        <footer className="bg-white border-t border-slate-200 py-6 text-center print:border-0">
-          <p className="text-sm text-slate-600">{institution.footer_message}</p>
+        <footer className="bg-white/80 backdrop-blur-lg border-t border-slate-200/50 py-8 text-center print:border-0 relative">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Sparkles className="h-4 w-4 text-indigo-500" />
+              <p className="text-slate-600 font-medium text-lg">{institution.footer_message}</p>
+              <Sparkles className="h-4 w-4 text-purple-500" />
+            </div>
+            <p className="text-sm text-slate-500">© 2024 {institution?.name}. All rights reserved.</p>
+          </div>
         </footer>
       )}
     </div>
