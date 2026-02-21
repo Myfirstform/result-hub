@@ -23,10 +23,10 @@ const RoleAssigner = () => {
 
     try {
       // Get user by email
-      const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+      const { data, error: userError } = await supabase.auth.admin.listUsers() as any;
       if (userError) throw userError;
 
-      const user = users?.find(u => u.email === email);
+      const user = (data?.users as any[])?.find((u: any) => u.email === email);
       if (!user) {
         toast({ title: "User not found", description: "Make sure the user is registered", variant: "destructive" });
         return;
@@ -43,7 +43,7 @@ const RoleAssigner = () => {
       if (role === "institution_admin" && institutionId) {
         const { error: adminError } = await supabase
           .from("institution_admins")
-          .upsert({ user_id: user.id, institution_id }, { onConflict: "user_id,institution_id" });
+          .upsert({ user_id: user.id, institution_id: institutionId }, { onConflict: "user_id,institution_id" } as any);
 
         if (adminError) throw adminError;
       }

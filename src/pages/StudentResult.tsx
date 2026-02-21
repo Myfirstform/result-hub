@@ -192,15 +192,11 @@ const StudentResult = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm py-6 print:border-0">
-        <div className="mx-auto max-w-4xl px-4 flex items-center gap-4">
-          {institution?.logo_url ? (
-            <img src={institution.logo_url} alt={institution.name} className="h-12 w-12 rounded-xl object-cover shadow-sm" />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl shadow-sm" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
-              <GraduationCap className="h-6 w-6" style={{ color: 'rgba(62, 45, 116)' }} />
-            </div>
+        <div className="mx-auto max-w-4xl px-4 flex flex-col items-center gap-3">
+          {institution?.logo_url && (
+            <img src={institution.logo_url} alt={institution.name} className="max-w-[120px] h-auto object-contain" />
           )}
-          <div>
+          <div className="text-center">
             <h1 className="text-2xl font-bold text-slate-900">{institution?.name}</h1>
             <p className="text-sm text-slate-600 mt-1">Student Result Portal</p>
           </div>
@@ -325,13 +321,9 @@ const StudentResult = () => {
               <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 pb-8">
                   <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center gap-4">
-                      {institution?.logo_url ? (
-                        <img src={institution.logo_url} alt="" className="h-16 w-16 rounded-xl object-cover shadow-sm" />
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-xl shadow-sm" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
-                          <GraduationCap className="h-8 w-8" style={{ color: 'rgba(62, 45, 116)' }} />
-                        </div>
+                    <div className="flex flex-col items-center gap-3">
+                      {institution?.logo_url && (
+                        <img src={institution.logo_url} alt="" className="max-w-[120px] h-auto object-contain" />
                       )}
                     </div>
                     <div>
