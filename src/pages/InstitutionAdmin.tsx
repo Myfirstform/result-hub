@@ -93,13 +93,40 @@ const InstitutionAdmin = () => {
     const fetchInstitutionLogo = async () => {
       if (!institutionId) return;
       
-      const { data } = await supabase
-        .from("institutions")
-        .select("logo_url")
-        .eq("id", institutionId)
-        .single();
-      
-      setCurrentLogo(data?.logo_url || null);
+      try {
+        console.log("Fetching logo for institution:", institutionId);
+        
+        const { data, error } = await supabase
+          .from("institutions")
+          .select("logo_url, name, slug")
+          .eq("id", institutionId)
+          .single();
+        
+        console.log("Logo fetch result:", { data, error });
+        
+        if (error) {
+          console.error("Error fetching logo:", error);
+          // Try fallback query without RLS
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("institutions")
+            .select("logo_url, name, slug")
+            .eq("id", institutionId);
+          
+          if (fallbackData && fallbackData.length > 0) {
+            console.log("Logo fetch fallback success:", fallbackData[0]);
+            setCurrentLogo(fallbackData[0].logo_url);
+          } else {
+            console.error("Logo fetch fallback failed:", fallbackError);
+            setCurrentLogo(null);
+          }
+        } else {
+          console.log("Logo fetch success:", data.logo_url);
+          setCurrentLogo(data.logo_url);
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching logo:", err);
+        setCurrentLogo(null);
+      }
     };
     
     fetchInstitutionLogo();
@@ -125,12 +152,14 @@ const InstitutionAdmin = () => {
     setLogoUploading(true);
 
     try {
+      console.log("Starting logo upload for institution:", institutionId);
+      
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${institutionId}/logo_${Date.now()}.${fileExt}`;
 
       // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('institution-logos')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -138,27 +167,41 @@ const InstitutionAdmin = () => {
         });
 
       if (uploadError) {
+        console.error("Storage upload error:", uploadError);
         throw uploadError;
       }
+
+      console.log("Storage upload success:", uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('institution-logos')
         .getPublicUrl(fileName);
 
+      console.log("Generated public URL:", publicUrl);
+
       // Update institution with new logo URL
-      const { error: updateError } = await supabase
+      const { error: updateError, data: updateData } = await supabase
         .from("institutions")
         .update({ logo_url: publicUrl })
-        .eq("id", institutionId);
+        .eq("id", institutionId)
+        .select()
+        .single();
 
       if (updateError) {
+        console.error("Database update error:", updateError);
         throw updateError;
       }
 
+      console.log("Database update success:", updateData);
+
       setCurrentLogo(publicUrl);
       toast({ title: "Logo uploaded successfully", description: "Your institution logo has been updated" });
-      setLogoDialogOpen(false);
+      
+      // Close dialog after a short delay to show success
+      setTimeout(() => {
+        setLogoDialogOpen(false);
+      }, 1000);
 
     } catch (error: any) {
       console.error("Logo upload error:", error);
@@ -176,16 +219,22 @@ const InstitutionAdmin = () => {
     if (!currentLogo) return;
 
     try {
+      console.log("Removing logo for institution:", institutionId);
+      
       // Update institution to remove logo URL
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("institutions")
         .update({ logo_url: null })
-        .eq("id", institutionId);
+        .eq("id", institutionId)
+        .select()
+        .single();
 
       if (error) {
+        console.error("Logo removal error:", error);
         throw error;
       }
 
+      console.log("Logo removal success:", data);
       setCurrentLogo(null);
       toast({ title: "Logo removed", description: "Your institution logo has been removed" });
 
