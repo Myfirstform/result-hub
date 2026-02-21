@@ -27,6 +27,19 @@ interface ResultData {
   rank: string | null;
 }
 
+interface PassMark {
+  class: string;
+  subject: string;
+  pass_mark: number;
+}
+
+interface SubjectWithStatus {
+  name: string;
+  marks: number;
+  status: 'pass' | 'fail';
+  passMark: number;
+}
+
 const StudentResult = () => {
   const { slug } = useParams<{ slug: string }>();
   const [institution, setInstitution] = useState<InstitutionInfo | null>(null);
@@ -36,6 +49,7 @@ const StudentResult = () => {
   const [result, setResult] = useState<ResultData | null>(null);
   const [searching, setSearching] = useState(false);
   const [loadingInst, setLoadingInst] = useState(true);
+  const [passMarks, setPassMarks] = useState<PassMark[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -109,7 +123,8 @@ const StudentResult = () => {
       register_number: regNumber,
     });
 
-    const { data } = await supabase
+    // Fetch student result
+    const { data: resultData } = await supabase
       .from("student_results")
       .select("student_name, register_number, class, subjects, total, grade, rank")
       .eq("institution_id", institution.id)
@@ -118,8 +133,16 @@ const StudentResult = () => {
       .eq("published", true)
       .maybeSingle();
 
-    if (data) {
-      setResult(data as ResultData);
+    if (resultData) {
+      // Fetch pass marks for this student's class
+      const { data: passMarksData } = await supabase
+        .from("pass_marks")
+        .select("class, subject, pass_mark")
+        .eq("institution_id", institution.id)
+        .eq("class", resultData.class);
+
+      setPassMarks(passMarksData || []);
+      setResult(resultData as ResultData);
     } else {
       toast({ title: "No result found", description: "Check your register number and secret code.", variant: "destructive" });
     }
@@ -434,31 +457,52 @@ const StudentResult = () => {
                             <TableRow>
                               <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-6 py-4">Subject</TableHead>
                               <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-6 py-4 text-right">Marks Obtained</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-6 py-4 text-center">Status</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody className="divide-y divide-slate-200">
-                            {result.subjects.map((s: any, i: number) => (
-                              <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
-                                <TableCell className="px-6 py-5">
-                                  <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-colors">
-                                      <BookOpen className="h-4 w-4 text-indigo-600" />
+                            {result.subjects.map((s: any, i: number) => {
+                              const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
+                              const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : 'pass'; // Default to pass if no pass mark set
+                              
+                              return (
+                                <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
+                                  <TableCell className="px-6 py-5">
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-colors">
+                                        <BookOpen className="h-4 w-4 text-indigo-600" />
+                                      </div>
+                                      <span className="font-semibold text-slate-900 text-lg">{s.name}</span>
                                     </div>
-                                    <span className="font-semibold text-slate-900 text-lg">{s.name}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-5 text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <div className="relative">
-                                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
-                                      <span className="relative inline-flex items-center px-4 py-2 rounded-full text-lg font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
-                                        {s.marks}
-                                      </span>
+                                  </TableCell>
+                                  <TableCell className="px-6 py-5 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <div className="relative">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+                                        <span className="relative inline-flex items-center px-4 py-2 rounded-full text-lg font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                                          {s.marks}
+                                        </span>
+                                      </div>
                                     </div>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                                  </TableCell>
+                                  <TableCell className="px-6 py-5 text-center">
+                                    <div className="flex items-center justify-center">
+                                      {status === 'pass' ? (
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200">
+                                          <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                          <span className="text-sm font-semibold text-emerald-700">Pass</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200">
+                                          <AlertCircle className="h-4 w-4 text-red-600" />
+                                          <span className="text-sm font-semibold text-red-700">Fail</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </div>
