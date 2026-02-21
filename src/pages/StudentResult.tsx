@@ -42,23 +42,30 @@ const StudentResult = () => {
     
     const fetchInstitution = async () => {
       try {
-        // First try the normal query
+        console.log("Fetching institution for slug:", slug);
+        
+        // First try to get institution without status filter (more permissive)
         const { data, error } = await supabase
           .from("institutions")
-          .select("id, name, logo_url, footer_message")
+          .select("id, name, logo_url, footer_message, status")
           .eq("slug", slug)
-          .eq("status", "active")
           .maybeSingle();
         
-        if (data) {
+        console.log("Institution query result:", { data, error });
+        
+        if (data && data.status === 'active') {
+          console.log("Found active institution:", data);
           setInstitution(data);
         } else if (error) {
           console.log("Institution query error:", error);
-          // If RLS blocks the query, try a broader approach
+          
+          // If RLS blocks, try with different approach
           const { data: allInstitutions } = await supabase
             .from("institutions")
             .select("id, name, logo_url, footer_message, slug, status")
             .eq("slug", slug);
+          
+          console.log("All institutions query result:", allInstitutions);
           
           if (allInstitutions && allInstitutions.length > 0) {
             const foundInstitution = allInstitutions.find(inst => inst.slug === slug);
@@ -66,12 +73,18 @@ const StudentResult = () => {
               console.log("Found institution via fallback:", foundInstitution);
               setInstitution(foundInstitution);
             } else {
+              console.log("No institution found with slug:", slug);
               setNotFound(true);
             }
           } else {
+            console.log("No institutions found in fallback query");
             setNotFound(true);
           }
+        } else if (data && data.status !== 'active') {
+          console.log("Institution found but not active:", data);
+          setNotFound(true);
         } else {
+          console.log("No institution found with slug:", slug);
           setNotFound(true);
         }
       } catch (err) {
