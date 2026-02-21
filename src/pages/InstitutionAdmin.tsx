@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X } from "lucide-react";
 
 import * as XLSX from "xlsx";
 
@@ -40,7 +40,7 @@ interface StudentResult {
   grade: string | null;
   rank: string | null;
   published: boolean;
-  created_by: string; // Track which admin uploaded the data
+  created_by: string | null;
 }
 
 
@@ -61,26 +61,76 @@ const InstitutionAdmin = () => {
   const [uploading, setUploading] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  const fetchLogoUrl = async () => {
+    if (!institutionId) return;
+    const { data } = await supabase
+      .from("institutions")
+      .select("logo_url")
+      .eq("id", institutionId)
+      .maybeSingle();
+    if (data) setLogoUrl(data.logo_url);
+  };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !institutionId) return;
+    setUploadingLogo(true);
+    const path = `${institutionId}/logo.png`;
+    const { error: uploadError } = await supabase.storage
+      .from("institution-logos")
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast({ title: "Logo upload failed", description: uploadError.message, variant: "destructive" });
+      setUploadingLogo(false);
+      return;
+    }
+    const { data: publicUrl } = supabase.storage.from("institution-logos").getPublicUrl(path);
+    const url = publicUrl.publicUrl + "?t=" + Date.now();
+    const { error: updateError } = await supabase
+      .from("institutions")
+      .update({ logo_url: url })
+      .eq("id", institutionId);
+    if (updateError) {
+      toast({ title: "Failed to save logo URL", description: updateError.message, variant: "destructive" });
+    } else {
+      setLogoUrl(url);
+      toast({ title: "Logo uploaded successfully" });
+    }
+    setUploadingLogo(false);
+    if (logoRef.current) logoRef.current.value = "";
+  };
+
+  const handleLogoDelete = async () => {
+    if (!institutionId) return;
+    setUploadingLogo(true);
+    await supabase.storage.from("institution-logos").remove([`${institutionId}/logo.png`]);
+    await supabase.from("institutions").update({ logo_url: null }).eq("id", institutionId);
+    setLogoUrl(null);
+    toast({ title: "Logo removed" });
+    setUploadingLogo(false);
+  };
 
   const fetchResults = async () => {
     if (!institutionId) return;
 
     const { data } = await supabase
       .from("student_results")
-      .select("*")
+      .select("id, register_number, secret_code, student_name, class, subjects, total, grade, rank, published, created_by")
       .eq("institution_id", institutionId)
-      .eq("created_by", user?.id) // Only show results uploaded by current admin
+      .eq("created_by", user?.id)
       .order("created_at", { ascending: false });
 
-    setResults((data as StudentResult[]) || []);
+    setResults((data as unknown as StudentResult[]) || []);
     setLoading(false);
   };
 
 
 
-  useEffect(() => { fetchResults(); }, [institutionId, user]);
+  useEffect(() => { fetchResults(); fetchLogoUrl(); }, [institutionId, user]);
 
 
 
@@ -437,7 +487,40 @@ const InstitutionAdmin = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+          {/* Logo Upload Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <Card className="border border-slate-200 shadow-sm rounded-lg mb-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Institution Logo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center gap-4">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-16 w-16 rounded object-cover border border-slate-200" />
+              ) : (
+                <div className="h-16 w-16 rounded border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                  No logo
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input ref={logoRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleLogoUpload} />
+                <Button variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={uploadingLogo}>
+                  {uploadingLogo ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
+                  {logoUrl ? "Replace" : "Upload"}
+                </Button>
+                {logoUrl && (
+                  <Button variant="outline" size="sm" onClick={handleLogoDelete} disabled={uploadingLogo}>
+                    <X className="h-3 w-3 mr-1" /> Remove
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+          {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="border-0 shadow-lg rounded-xl overflow-hidden">

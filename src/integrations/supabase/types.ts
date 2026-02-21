@@ -115,6 +115,7 @@ export type Database = {
         Row: {
           class: string | null
           created_at: string
+          created_by: string | null
           grade: string | null
           id: string
           institution_id: string
@@ -130,6 +131,7 @@ export type Database = {
         Insert: {
           class?: string | null
           created_at?: string
+          created_by?: string | null
           grade?: string | null
           id?: string
           institution_id: string
@@ -145,6 +147,7 @@ export type Database = {
         Update: {
           class?: string | null
           created_at?: string
+          created_by?: string | null
           grade?: string | null
           id?: string
           institution_id?: string
@@ -190,6 +193,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_institutions_for_super_admin: {
+        Args: never
+        Returns: {
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          footer_message: string
+          id: string
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_institution_id_for_admin: {
         Args: { _user_id: string }
         Returns: string
