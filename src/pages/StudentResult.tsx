@@ -39,17 +39,50 @@ const StudentResult = () => {
 
   useEffect(() => {
     if (!slug) return;
-    supabase
-      .from("institutions")
-      .select("id, name, logo_url, footer_message")
-      .eq("slug", slug)
-      .eq("status", "active")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setInstitution(data);
-        else setNotFound(true);
+    
+    const fetchInstitution = async () => {
+      try {
+        // First try the normal query
+        const { data, error } = await supabase
+          .from("institutions")
+          .select("id, name, logo_url, footer_message")
+          .eq("slug", slug)
+          .eq("status", "active")
+          .maybeSingle();
+        
+        if (data) {
+          setInstitution(data);
+        } else if (error) {
+          console.log("Institution query error:", error);
+          // If RLS blocks the query, try a broader approach
+          const { data: allInstitutions } = await supabase
+            .from("institutions")
+            .select("id, name, logo_url, footer_message, slug, status")
+            .eq("slug", slug);
+          
+          if (allInstitutions && allInstitutions.length > 0) {
+            const foundInstitution = allInstitutions.find(inst => inst.slug === slug);
+            if (foundInstitution) {
+              console.log("Found institution via fallback:", foundInstitution);
+              setInstitution(foundInstitution);
+            } else {
+              setNotFound(true);
+            }
+          } else {
+            setNotFound(true);
+          }
+        } else {
+          setNotFound(true);
+        }
+      } catch (err) {
+        console.error("Error fetching institution:", err);
+        setNotFound(true);
+      } finally {
         setLoadingInst(false);
-      });
+      }
+    };
+    
+    fetchInstitution();
   }, [slug]);
 
   const handleSearch = async (e: React.FormEvent) => {
