@@ -24,11 +24,12 @@ ALTER TABLE pass_marks ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
 -- Policy for institution admins to manage their own pass marks
+-- Using institution_admins table to determine access
 CREATE POLICY "Institution admins can manage their pass marks" ON pass_marks
     FOR ALL USING (
-        institution_id = (
-            SELECT id FROM institutions 
-            WHERE created_by = auth.uid()
+        institution_id IN (
+            SELECT institution_id FROM institution_admins 
+            WHERE user_id = auth.uid()
         )
     );
 
@@ -54,40 +55,8 @@ CREATE TRIGGER update_pass_marks_updated_at
 GRANT ALL ON pass_marks TO authenticated;
 GRANT SELECT ON pass_marks TO anon;
 
--- Insert some sample data (optional - can be removed)
--- This is just for testing purposes
-INSERT INTO pass_marks (institution_id, class, subject, pass_mark, created_by) 
-SELECT 
-    i.id,
-    '10th Grade',
-    'Mathematics',
-    35,
-    i.created_by
-FROM institutions i 
-WHERE i.created_by IS NOT NULL
-ON CONFLICT (institution_id, class, subject) DO NOTHING;
-
-INSERT INTO pass_marks (institution_id, class, subject, pass_mark, created_by) 
-SELECT 
-    i.id,
-    '10th Grade',
-    'Science',
-    40,
-    i.created_by
-FROM institutions i 
-WHERE i.created_by IS NOT NULL
-ON CONFLICT (institution_id, class, subject) DO NOTHING;
-
-INSERT INTO pass_marks (institution_id, class, subject, pass_mark, created_by) 
-SELECT 
-    i.id,
-    '10th Grade',
-    'English',
-    33,
-    i.created_by
-FROM institutions i 
-WHERE i.created_by IS NOT NULL
-ON CONFLICT (institution_id, class, subject) DO NOTHING;
+-- Sample data insertion removed - will be handled through the UI
+-- You can add pass marks through the admin interface after uploading results
 
 -- Verification query
 SELECT 'Pass marks table created successfully' as status;

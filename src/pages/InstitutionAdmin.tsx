@@ -97,9 +97,6 @@ const InstitutionAdmin = () => {
   };
 
   const fetchPassMarks = async () => {
-    // Temporarily disabled until database table is created
-    // TODO: Uncomment after creating pass_marks table
-    /*
     if (!institutionId) return;
     setPassMarksLoading(true);
 
@@ -117,7 +114,6 @@ const InstitutionAdmin = () => {
       setPassMarks(data || []);
     }
     setPassMarksLoading(false);
-    */
   };
 
   const fetchAvailableClassesAndSubjects = () => {
@@ -144,7 +140,7 @@ const InstitutionAdmin = () => {
 
 
   useEffect(() => { fetchResults(); }, [institutionId, user?.id]);
-  // useEffect(() => { fetchPassMarks(); }, [institutionId, user?.id]); // TODO: Uncomment after creating pass_marks table
+  useEffect(() => { fetchPassMarks(); }, [institutionId, user?.id]);
   useEffect(() => { fetchAvailableClassesAndSubjects(); }, [results]);
 
 
@@ -373,8 +369,43 @@ const InstitutionAdmin = () => {
       return;
     }
 
-    // TODO: Implement after creating pass_marks table
-    toast({ title: "Coming soon", description: "Pass marks feature will be available after database setup" });
+    if (editingPassMark) {
+      // Update existing pass mark
+      const { error } = await supabase
+        .from("pass_marks")
+        .update({ pass_mark: passMarkValue })
+        .eq("id", editingPassMark.id);
+
+      if (error) {
+        toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Pass mark updated successfully" });
+        setPassMarkDialogOpen(false);
+        setEditingPassMark(null);
+        resetPassMarkForm();
+        fetchPassMarks();
+      }
+    } else {
+      // Create new pass mark
+      const { error } = await supabase
+        .from("pass_marks")
+        .insert({
+          institution_id: institutionId,
+          class: selectedClass,
+          subject: selectedSubject,
+          pass_mark: passMarkValue,
+          created_by: user?.id
+        });
+
+      if (error) {
+        toast({ title: "Create failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Pass mark created successfully" });
+        setPassMarkDialogOpen(false);
+        resetPassMarkForm();
+        fetchPassMarks();
+      }
+    }
   };
 
   const handleEditPassMark = (passMark: PassMark) => {
@@ -387,8 +418,15 @@ const InstitutionAdmin = () => {
 
   const handleDeletePassMark = async (id: string) => {
     if (!confirm("Are you sure you want to delete this pass mark?")) return;
-    // TODO: Implement after creating pass_marks table
-    toast({ title: "Coming soon", description: "Pass marks feature will be available after database setup" });
+
+    const { error } = await supabase.from("pass_marks").delete().eq("id", id);
+
+    if (error) {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Pass mark deleted successfully" });
+      fetchPassMarks();
+    }
   };
 
   const resetPassMarkForm = () => {
