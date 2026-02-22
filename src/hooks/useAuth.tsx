@@ -41,8 +41,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(roleData.role as AppRole);
       } else {
         console.log("No role data found for user, setting fallback");
-        // Set fallback role immediately instead of waiting
-        setRole("institution_admin");
+        // Don't set fallback immediately - wait for proper role determination
+        // Only set fallback if we're certain this is not a super admin
+        // Check if user might be super admin by checking user_roles table more broadly
+        const { data: allRoles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId);
+        
+        const hasSuperAdminRole = allRoles?.some(r => r.role === "super_admin");
+        
+        if (!hasSuperAdminRole) {
+          setRole("institution_admin");
+        }
       }
 
       const { data: adminData, error: adminError } = await supabase
@@ -61,8 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Unexpected error in fetchRoleData:", error);
-      // Set fallback on any error
-      setRole("institution_admin");
+      // Don't set fallback on error - let the user handle it
     }
   };
 
