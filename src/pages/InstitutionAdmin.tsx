@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen, AlertTriangle, CheckSquare, Square } from "lucide-react";
 
 import * as XLSX from "xlsx";
 
@@ -81,6 +81,12 @@ const InstitutionAdmin = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [newPassMark, setNewPassMark] = useState("");
+
+  // Bulk actions state
+  const [selectedResults, setSelectedResults] = useState<string[]>([]);
+  const [selectedPassMarks, setSelectedPassMarks] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   const fetchResults = async () => {
     if (!institutionId) return;
@@ -436,6 +442,127 @@ const InstitutionAdmin = () => {
     setEditingPassMark(null);
   };
 
+  // Bulk action functions for Student Results
+  const handleSelectAllResults = () => {
+    if (selectedResults.length === filtered.length) {
+      setSelectedResults([]);
+    } else {
+      setSelectedResults(filtered.map(r => r.id));
+    }
+  };
+
+  const handleSelectResult = (id: string) => {
+    setSelectedResults(prev => 
+      prev.includes(id) 
+        ? prev.filter(selectedId => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkDeleteResults = async () => {
+    if (selectedResults.length === 0) return;
+    
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('student_results')
+        .delete()
+        .in('id', selectedResults);
+      
+      if (error) throw error;
+      
+      toast({ 
+        title: "Bulk delete successful", 
+        description: `Deleted ${selectedResults.length} result(s)` 
+      });
+      setSelectedResults([]);
+      fetchResults();
+    } catch (error: any) {
+      toast({ 
+        title: "Bulk delete failed", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkPublish = async (publish: boolean) => {
+    if (selectedResults.length === 0) return;
+    
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('student_results')
+        .update({ published: publish })
+        .in('id', selectedResults);
+      
+      if (error) throw error;
+      
+      toast({ 
+        title: `Bulk ${publish ? 'publish' : 'draft'} successful`, 
+        description: `${publish ? 'Published' : 'Set to draft'} ${selectedResults.length} result(s)` 
+      });
+      setSelectedResults([]);
+      fetchResults();
+    } catch (error: any) {
+      toast({ 
+        title: `Bulk ${publish ? 'publish' : 'draft'} failed`, 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  // Bulk action functions for Pass Marks
+  const handleSelectAllPassMarks = () => {
+    if (selectedPassMarks.length === passMarks.length) {
+      setSelectedPassMarks([]);
+    } else {
+      setSelectedPassMarks(passMarks.map(pm => pm.id));
+    }
+  };
+
+  const handleSelectPassMark = (id: string) => {
+    setSelectedPassMarks(prev => 
+      prev.includes(id) 
+        ? prev.filter(selectedId => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkDeletePassMarks = async () => {
+    if (selectedPassMarks.length === 0) return;
+    
+    setBulkActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('pass_marks')
+        .delete()
+        .in('id', selectedPassMarks);
+      
+      if (error) throw error;
+      
+      toast({ 
+        title: "Bulk delete successful", 
+        description: `Deleted ${selectedPassMarks.length} pass mark(s)` 
+      });
+      setSelectedPassMarks([]);
+      fetchPassMarks();
+    } catch (error: any) {
+      toast({ 
+        title: "Bulk delete failed", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
 
 
   const filtered = results.filter((r) =>
@@ -632,17 +759,35 @@ const InstitutionAdmin = () => {
                     <p className="text-sm text-slate-600">Set pass marks for subjects by class</p>
                   </div>
                 </div>
-                <Dialog open={passMarkDialogOpen} onOpenChange={setPassMarkDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-                      style={{ backgroundColor: 'rgba(62, 45, 116)' }}
-                      onClick={() => resetPassMarkForm()}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Pass Mark
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex items-center gap-2">
+                  {selectedPassMarks.length > 0 && (
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">
+                        {selectedPassMarks.length} selected
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleBulkDeletePassMarks}
+                        disabled={bulkActionLoading}
+                        className="h-8 w-8 p-0 hover:bg-red-100"
+                        title="Delete Selected"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </div>
+                  )}
+                  <Dialog open={passMarkDialogOpen} onOpenChange={setPassMarkDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                        style={{ backgroundColor: 'rgba(62, 45, 116)' }}
+                        onClick={() => resetPassMarkForm()}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Pass Mark
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-md border-0 shadow-2xl">
                     <DialogHeader className="pb-4">
                       <DialogTitle className="text-xl font-semibold text-slate-900">
@@ -714,6 +859,7 @@ const InstitutionAdmin = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -741,9 +887,41 @@ const InstitutionAdmin = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {passMarks.length > 1 && (
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleSelectAllPassMarks}
+                          className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                        >
+                          {selectedPassMarks.length === passMarks.length ? (
+                            <CheckSquare className="h-4 w-4 text-indigo-600" />
+                          ) : (
+                            <Square className="h-4 w-4 text-slate-400" />
+                          )}
+                          {selectedPassMarks.length === passMarks.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                      </div>
+                      {selectedPassMarks.length > 0 && (
+                        <div className="text-sm text-slate-600">
+                          {selectedPassMarks.length} of {passMarks.length} selected
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {passMarks.map((passMark) => (
                     <div key={passMark.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                       <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleSelectPassMark(passMark.id)}
+                          className="flex items-center justify-center"
+                        >
+                          {selectedPassMarks.includes(passMark.id) ? (
+                            <CheckSquare className="h-4 w-4 text-indigo-600" />
+                          ) : (
+                            <Square className="h-4 w-4 text-slate-400" />
+                          )}
+                        </button>
                         <div className="p-2 rounded-lg bg-indigo-50">
                           <BookOpen className="h-5 w-5 text-indigo-600" />
                         </div>
@@ -811,13 +989,69 @@ const InstitutionAdmin = () => {
           {/* Results Table */}
           <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-              <CardTitle className="text-lg font-semibold text-slate-900">Student Results</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-slate-900">Student Results</CardTitle>
+                {selectedResults.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">
+                        {selectedResults.length} selected
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleBulkPublish(true)}
+                        disabled={bulkActionLoading}
+                        className="h-8 w-8 p-0 hover:bg-emerald-100"
+                        title="Publish Selected"
+                      >
+                        <Eye className="h-4 w-4 text-emerald-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleBulkPublish(false)}
+                        disabled={bulkActionLoading}
+                        className="h-8 w-8 p-0 hover:bg-amber-100"
+                        title="Set to Draft"
+                      >
+                        <EyeOff className="h-4 w-4 text-amber-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleBulkDeleteResults}
+                        disabled={bulkActionLoading}
+                        className="h-8 w-8 p-0 hover:bg-red-100"
+                        title="Delete Selected"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow>
+                      <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 w-12">
+                        {filtered.length > 0 && (
+                          <button
+                            onClick={handleSelectAllResults}
+                            className="flex items-center justify-center"
+                            title={selectedResults.length === filtered.length ? 'Deselect All' : 'Select All'}
+                          >
+                            {selectedResults.length === filtered.length ? (
+                              <CheckSquare className="h-4 w-4 text-indigo-600" />
+                            ) : (
+                              <Square className="h-4 w-4 text-slate-400" />
+                            )}
+                          </button>
+                        )}
+                      </TableHead>
                       <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Register No.</TableHead>
                       <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3">Student Name</TableHead>
                       <TableHead className="text-xs font-semibold text-slate-700 uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Class</TableHead>
@@ -852,6 +1086,19 @@ const InstitutionAdmin = () => {
                       </TableRow>
                     ) : filtered.map((r) => (
                       <TableRow key={r.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell className="px-4 py-4">
+                          <button
+                            onClick={() => handleSelectResult(r.id)}
+                            className="flex items-center justify-center"
+                            title="Select this result"
+                          >
+                            {selectedResults.includes(r.id) ? (
+                              <CheckSquare className="h-4 w-4 text-indigo-600" />
+                            ) : (
+                              <Square className="h-4 w-4 text-slate-400" />
+                            )}
+                          </button>
+                        </TableCell>
                         <TableCell className="px-4 py-4">
                           <span className="font-mono text-sm font-medium text-slate-900">
                             {r.register_number}
