@@ -316,10 +316,15 @@ const SuperAdmin = () => {
                           Cancel
                         </Button>
                       </div>
-        </Dialog>
-      </div>
-      
-      {/* Main Content */}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filter Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mb-8">
@@ -530,6 +535,7 @@ const SuperAdmin = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </AdminLayout>
   );
