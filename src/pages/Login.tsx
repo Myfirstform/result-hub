@@ -22,7 +22,23 @@ const Login = () => {
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      console.error("Login error:", error);
+      
+      // Provide more specific error messages
+      let errorMessage = error.message;
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please confirm your email address before logging in.";
+      } else if (error.message.includes("Too many requests")) {
+        errorMessage = "Too many login attempts. Please try again later.";
+      }
+      
+      toast({ 
+        title: "Login failed", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } else {
       toast({ title: "Welcome back!" });
       navigate("/admin");

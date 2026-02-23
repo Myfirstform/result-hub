@@ -27,52 +27,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("fetchRoleData called for userId:", userId);
     
     try {
-      // Use a simple approach without complex retry logic
-      const { data: roleData, error: roleError } = await supabase
+      // Check if user has super_admin role first
+      const { data: superAdminData, error: superAdminError } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
+        .eq("role", "super_admin")
         .maybeSingle();
 
-      console.log("Role query result:", { roleData, roleError });
+      console.log("Super admin check result:", { superAdminData, superAdminError });
 
-      if (roleData) {
-        console.log("Setting role:", roleData.role);
-        setRole(roleData.role as AppRole);
-      } else {
-        console.log("No role data found for user, setting fallback");
-        // Don't set fallback immediately - wait for proper role determination
-        // Only set fallback if we're certain this is not a super admin
-        // Check if user might be super admin by checking user_roles table more broadly
-        const { data: allRoles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId);
-        
-        const hasSuperAdminRole = allRoles?.some(r => r.role === "super_admin");
-        
-        if (!hasSuperAdminRole) {
-          setRole("institution_admin");
-        }
+      if (superAdminData) {
+        console.log("User is super admin");
+        setRole("super_admin");
+        return;
       }
 
-      const { data: adminData, error: adminError } = await supabase
+      // Check if user has institution_admin role
+      const { data: institutionAdminData, error: institutionAdminError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "institution_admin")
+        .maybeSingle();
+
+      console.log("Institution admin check result:", { institutionAdminData, institutionAdminError });
+
+      if (institutionAdminData) {
+        console.log("User is institution admin");
+        setRole("institution_admin");
+        
+        // Get institution ID for institution admin
+        const { data: adminData, error: adminError } = await supabase
+          .from("institution_admins")
+          .select("institution_id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        console.log("Admin query result:", { adminData, adminError });
+
+        if (adminData) {
+          console.log("Setting institutionId:", adminData.institution_id);
+          setInstitutionId(adminData.institution_id);
+        }
+        return;
+      }
+
+      // Fallback: Check if user has institution_admins entry but no user_roles entry
+      const { data: orphanedAdmin } = await supabase
         .from("institution_admins")
         .select("institution_id")
         .eq("user_id", userId)
         .maybeSingle();
 
-      console.log("Admin query result:", { adminData, adminError });
-
-      if (adminData) {
-        console.log("Setting institutionId:", adminData.institution_id);
-        setInstitutionId(adminData.institution_id);
-      } else {
-        console.log("No admin data found for user");
+      if (orphanedAdmin) {
+        console.log("Found orphaned institution admin, creating role entry");
+        // Create missing user_roles entry
+        await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: "institution_admin" });
+        
+        setRole("institution_admin");
+        setInstitutionId(orphanedAdmin.institution_id);
+        return;
       }
+
+      console.log("No role found for user");
+      setRole(null);
+      setInstitutionId(null);
+      
     } catch (error) {
       console.error("Unexpected error in fetchRoleData:", error);
-      // Don't set fallback on error - let the user handle it
+      setRole(null);
+      setInstitutionId(null);
     }
   };
 
