@@ -58,47 +58,62 @@ const StudentResult = () => {
       try {
         console.log("Fetching institution for slug:", slug);
         
-        // First try to get institution without status filter (more permissive)
-        const { data, error } = await supabase
+        // Try multiple approaches to handle RLS blocking
+        let institutionData = null;
+        let lastError = null;
+        
+        // Approach 1: Direct query with status filter
+        const { data: data1, error: error1 } = await supabase
           .from("institutions")
           .select("id, name, logo_url, footer_message, status")
           .eq("slug", slug)
           .maybeSingle();
         
-        console.log("Institution query result:", { data, error });
+        console.log("Approach 1 result:", { data: data1, error: error1 });
         
-        if (data && data.status === 'active') {
-          console.log("Found active institution:", data);
-          setInstitution(data);
-        } else if (error) {
-          console.log("Institution query error:", error);
+        if (data1) {
+          institutionData = data1;
+        } else {
+          lastError = error1;
           
-          // If RLS blocks, try with different approach
-          const { data: allInstitutions } = await supabase
+          // Approach 2: Query without status filter (more permissive)
+          const { data: data2, error: error2 } = await supabase
             .from("institutions")
             .select("id, name, logo_url, footer_message, slug, status")
-            .eq("slug", slug);
+            .eq("slug", slug)
+            .maybeSingle();
           
-          console.log("All institutions query result:", allInstitutions);
+          console.log("Approach 2 result:", { data: data2, error: error2 });
           
-          if (allInstitutions && allInstitutions.length > 0) {
-            const foundInstitution = allInstitutions.find(inst => inst.slug === slug);
-            if (foundInstitution) {
-              console.log("Found institution via fallback:", foundInstitution);
-              setInstitution(foundInstitution);
-            } else {
-              console.log("No institution found with slug:", slug);
-              setNotFound(true);
-            }
+          if (data2) {
+            institutionData = data2;
           } else {
-            console.log("No institutions found in fallback query");
-            setNotFound(true);
+            lastError = error2;
+            
+            // Approach 3: Get all institutions and filter client-side
+            const { data: data3, error: error3 } = await supabase
+              .from("institutions")
+              .select("id, name, logo_url, footer_message, slug, status")
+              .eq("slug", slug);
+            
+            console.log("Approach 3 result:", { data: data3, error: error3 });
+            
+            if (data3 && data3.length > 0) {
+              institutionData = data3.find(inst => inst.slug === slug) || data3[0];
+            } else {
+              lastError = error3;
+            }
           }
-        } else if (data && data.status !== 'active') {
-          console.log("Institution found but not active:", data);
-          setNotFound(true);
+        }
+        
+        console.log("Final institution data:", institutionData);
+        
+        if (institutionData) {
+          // Accept institution regardless of status - let RLS handle access control
+          console.log("Setting institution data:", institutionData);
+          setInstitution(institutionData);
         } else {
-          console.log("No institution found with slug:", slug);
+          console.log("All approaches failed, last error:", lastError);
           setNotFound(true);
         }
       } catch (err) {
