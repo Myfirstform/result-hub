@@ -42,14 +42,14 @@ BEGIN
   -- This function bypasses RLS to ensure institution access
   RETURN QUERY 
   SELECT 
-    id, name, slug, status, logo_url, contact_email, contact_phone, footer_message, created_at, updated_at
+    i.id, i.name, i.slug, i.status, i.logo_url, i.contact_email, i.contact_phone, i.footer_message, i.created_at, i.updated_at
   FROM 
-    public.institutions
+    public.institutions i
   WHERE 
-    slug = _slug
-    AND status = 'active'
+    i.slug = _slug
+    AND i.status = 'active'
   ORDER BY 
-    created_at DESC
+    i.created_at DESC
   LIMIT 1;
 END;
 $$;
