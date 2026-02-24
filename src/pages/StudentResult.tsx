@@ -416,7 +416,7 @@ const StudentResult = () => {
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8 print:border-0 relative">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8 print:hidden relative">
         <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:gap-4">
           {(institution?.logo_url || defaultLogoUrl) && (
             <div className="relative">
@@ -446,8 +446,8 @@ const StudentResult = () => {
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-center justify-center py-8 sm:py-16 px-4 relative">
-        <div className="w-full max-w-6xl space-y-6 sm:space-y-10">
+      <main className="flex-1 flex items-start justify-start py-0 sm:py-16 px-4 print:py-4 relative">
+        <div className="w-full max-w-6xl space-y-2 sm:space-y-10 print:space-y-1">
           {!result ? (
             <div className="space-y-10">
               {/* Search Card */}
@@ -581,9 +581,9 @@ const StudentResult = () => {
               </Card>
             </div>
           ) : (
-            <div className="space-y-8 print:space-y-4" id="result-card">
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
-                <CardContent className="p-6 sm:p-10 space-y-8 sm:space-y-10">
+            <div className="space-y-2 print:space-y-1" id="result-card">
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+                <CardContent className="p-4 sm:p-10 space-y-4 sm:space-y-10 print:p-2 print:space-y-2">
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 mb-4 sm:mb-6">
