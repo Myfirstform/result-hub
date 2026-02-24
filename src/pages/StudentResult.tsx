@@ -864,32 +864,32 @@ const StudentResult = () => {
       </div>
 
       {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden">
-                <Button 
-                  onClick={() => window.print()} 
-                  variant="outline" 
-                  className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
-                >
-                  <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base">Print Result</span>
-                </Button>
-                <Button 
-                  onClick={handleDownload} 
-                  variant="outline" 
-                  className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
-                >
-                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base">Download PDF</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setResult(null)} 
-                  className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
-                >
-                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base">Search Another</span>
-                </Button>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-6">
+            <Button 
+              onClick={() => window.print()} 
+              variant="outline" 
+              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            >
+              <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-sm sm:text-base">Print Result</span>
+            </Button>
+            <Button 
+              onClick={handleDownload} 
+              variant="outline" 
+              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            >
+              <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-sm sm:text-base">Download PDF</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setResult(null)} 
+              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            >
+              <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="text-sm sm:text-base">Search Another</span>
+            </Button>
+          </div>
             </div>
           )}
         </div>
