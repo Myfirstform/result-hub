@@ -581,7 +581,7 @@ const StudentResult = () => {
               </Card>
             </div>
           ) : (
-            <div className="space-y-2 print:space-y-1" id="result-card">
+            <div className="space-y-2 print:space-y-1 print:hidden" id="result-card">
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
                 <CardContent className="p-4 sm:p-10 space-y-4 sm:space-y-10 print:p-2 print:space-y-2">
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
