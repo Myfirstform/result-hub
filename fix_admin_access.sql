@@ -24,9 +24,9 @@ SELECT
     ia.user_id,
     'institution_admin'::app_role
 FROM public.institution_admins ia
-LEFT JOIN public.user_roles ur ON ia.user_id = ur.user_id
+LEFT JOIN public.user_roles ur ON ia.user_id = ur.user_id AND ur.role = 'institution_admin'
 WHERE ur.user_id IS NULL
-ON CONFLICT (user_id) DO UPDATE SET role = 'institution_admin'::app_role;
+ON CONFLICT (user_id, role) DO UPDATE SET role = 'institution_admin'::app_role;
 
 -- 3. Fix missing institution_admins for users with roles
 INSERT INTO public.institution_admins (user_id, institution_id)
