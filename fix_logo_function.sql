@@ -32,7 +32,7 @@ BEGIN
     SET logo_url = p_logo_url,
         updated_at = NOW()
     WHERE id = p_institution_id
-    RETURNING id, name, logo_url, updated_at;
+    RETURNING institutions.id, institutions.name, institutions.logo_url, institutions.updated_at;
   ELSE
     RAISE EXCEPTION 'Permission denied: User is not an admin for this institution';
   END IF;
