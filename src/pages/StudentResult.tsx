@@ -864,22 +864,22 @@ const StudentResult = () => {
       </div>
 
       {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-6">
-            <Button 
-              onClick={() => window.print()} 
-              variant="outline" 
-              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
-            >
-              <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-sm sm:text-base">Print Result</span>
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-8">
             <Button 
               onClick={handleDownload} 
-              variant="outline" 
-              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+              className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
             >
-              <Download className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-sm sm:text-base">Download PDF</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative flex items-center gap-3 sm:gap-4">
+                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  <Download className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <div className="text-left">
+                  <span className="text-sm sm:text-base font-bold block">Download Certificate</span>
+                  <span className="text-xs sm:text-sm opacity-90">Professional PDF Format</span>
+                </div>
+              </div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
             </Button>
             <Button 
               variant="outline" 
