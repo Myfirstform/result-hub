@@ -1,6 +1,9 @@
 -- Create a Supabase function to allow institution admins to update their logo
 -- This bypasses RLS issues by using SECURITY DEFINER
 
+-- Drop existing function first to change return type
+DROP FUNCTION IF EXISTS update_institution_logo(uuid, text);
+
 CREATE OR REPLACE FUNCTION update_institution_logo(
   p_institution_id UUID,
   p_logo_url TEXT DEFAULT NULL
