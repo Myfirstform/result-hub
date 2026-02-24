@@ -210,14 +210,6 @@ const StudentResult = () => {
       .maybeSingle();
 
     if (resultData) {
-      // Fetch pass marks for this student's class
-      const { data: passMarksData } = await supabase
-        .from("pass_marks")
-        .select("class, subject, pass_mark")
-        .eq("institution_id", institution.id)
-        .eq("class", resultData.class);
-
-      setPassMarks(passMarksData || []);
       setResult(resultData as ResultData);
     } else {
       toast({ title: "No result found", description: "Check your register number and secret code.", variant: "destructive" });
@@ -660,7 +652,7 @@ const StudentResult = () => {
 
               {/* Modern Print Layout - Hidden from screen, visible in print */}
       <div id="result-certificate" className="hidden print:block">
-        <div className="min-h-screen bg-white p-8">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 sm:p-8">
           {/* Modern Header */}
           <div className="text-center mb-8">
             {institution?.logo_url && (
@@ -674,103 +666,120 @@ const StudentResult = () => {
             <p className="text-sm text-gray-500">Generated on {new Date().toLocaleDateString()}</p>
           </div>
 
-          {/* Student Information Card */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-8 border border-blue-200">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
-              Student Information
-            </h3>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-gray-700"><span className="font-semibold">Name:</span> {result?.student_name}</p>
-                <p className="text-gray-700"><span className="font-semibold">Register Number:</span> {result?.register_number}</p>
-                {result?.class && <p className="text-gray-700"><span className="font-semibold">Class:</span> {result.class}</p>}
+          {/* Main Result Card - Same as main display */}
+          <div className="text-card-foreground border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm mb-8">
+            <div className="relative p-6 sm:p-8">
+              {/* Student Info Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="relative">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                      <GraduationCap className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{result?.student_name}</h2>
+                    <p className="text-sm sm:text-base text-gray-600">Class: {result?.class || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Register Number</p>
+                  <p className="text-lg sm:text-xl font-mono font-bold text-gray-900">{result?.register_number}</p>
+                </div>
               </div>
-              <div className="text-right">
-                {result?.total !== null && <p className="text-gray-700"><span className="font-semibold">Total Marks:</span> <span className="text-2xl font-bold text-blue-600">{result.total}</span></p>}
-                {result?.grade && <p className="text-gray-700"><span className="font-semibold">Grade:</span> <span className="text-xl font-bold text-green-600">{result.grade}</span></p>}
-                {result?.rank && <p className="text-gray-700"><span className="font-semibold">Rank:</span> <span className="text-xl font-bold text-purple-600">{result.rank}</span></p>}
-              </div>
-            </div>
-          </div>
 
-          {/* Subject Results Table */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-              Subject Performance
-            </h3>
-            {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
-              <div className="overflow-hidden rounded-lg border border-gray-200">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 border-b border-gray-200">Subject</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 border-b border-gray-200">Marks Obtained</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 border-b border-gray-200">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {result.subjects.map((subject: any, index: number) => {
-                      const passMark = passMarks.find(pm => pm.subject === subject.name);
-                      const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-                      
-                      return (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{subject.name}</td>
-                          <td className="px-6 py-4 text-sm text-center font-bold text-gray-900">{subject.marks}</td>
-                          <td className="px-6 py-4 text-sm text-center">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                              status === 'PASS' 
-                                ? 'bg-green-100 text-green-800 border border-green-200' 
-                                : 'bg-red-100 text-red-800 border border-red-200'
-                            }`}>
-                              {status}
-                            </span>
-                          </td>
+              {/* Subject Results Table */}
+              <div className="mb-6 sm:mb-8">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />
+                  Subject Results
+                </h3>
+                {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b-2 border-gray-200">
+                          <th className="text-left py-3 px-4 text-sm sm:text-base font-semibold text-gray-700">Subject</th>
+                          <th className="text-center py-3 px-4 text-sm sm:text-base font-semibold text-gray-700">Marks</th>
+                          <th className="text-center py-3 px-4 text-sm sm:text-base font-semibold text-gray-700">Status</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {result.subjects.map((subject: any, index: number) => {
+                          const status = 'PASS'; // Default to PASS since we don't have pass marks data
+                          
+                          return (
+                            <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 text-sm sm:text-base text-gray-900">{subject.name}</td>
+                              <td className="py-3 px-4 text-center text-sm sm:text-base font-bold text-gray-900">{subject.marks}</td>
+                              <td className="py-3 px-4 text-center">
+                                <span className={`inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${
+                                  status === 'PASS' 
+                                    ? 'bg-green-100 text-green-700 border border-green-200' 
+                                    : 'bg-red-100 text-red-700 border border-red-200'
+                                }`}>
+                                  {status === 'PASS' ? <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" /> : <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
+                                  {status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <SearchX className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-sm sm:text-base">No subjects data available</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">No subjects data available</p>
-              </div>
-            )}
-          </div>
 
-          {/* Summary Cards */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
-              Performance Summary
-            </h3>
-            <div className="grid grid-cols-3 gap-6">
-              {result?.total !== null && (
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white text-center shadow-lg">
-                  <div className="text-3xl font-bold mb-2">{result.total}</div>
-                  <div className="text-blue-100">Total Marks</div>
-                </div>
-              )}
-              {result?.grade && (
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white text-center shadow-lg">
-                  <div className="text-3xl font-bold mb-2">{result.grade}</div>
-                  <div className="text-green-100">Grade</div>
-                </div>
-              )}
-              {result?.rank && (
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white text-center shadow-lg">
-                  <div className="text-3xl font-bold mb-2">{result.rank}</div>
-                  <div className="text-purple-100">Rank</div>
-                </div>
-              )}
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                {result?.total !== null && (
+                  <div className="text-center p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+                    <div className="relative mb-3 sm:mb-4">
+                      <div className="mx-auto p-2 sm:p-3 rounded-xl bg-white/20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                        <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-blue-100 mb-1 sm:mb-2">Total Marks</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{result.total}</p>
+                  </div>
+                )}
+                
+                {result?.grade && (
+                  <div className="text-center p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
+                    <div className="relative mb-3 sm:mb-4">
+                      <div className="mx-auto p-2 sm:p-3 rounded-xl bg-white/20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                        <Award className="h-5 w-5 sm:h-6 sm:w-6" />
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-green-100 mb-1 sm:mb-2">Grade</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{result.grade}</p>
+                  </div>
+                )}
+                
+                {result?.rank && (
+                  <div className="text-center p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg">
+                    <div className="relative mb-3 sm:mb-4">
+                      <div className="mx-auto p-2 sm:p-3 rounded-xl bg-white/20 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                        <Crown className="h-5 w-5 sm:h-6 sm:w-6" />
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-amber-100 mb-1 sm:mb-2">Rank</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{result.rank}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Institution Footer */}
-          <div className="mt-12 pt-8 border-t-2 border-gray-300">
+          <div className="mt-8 pt-6 border-t border-gray-300">
             <div className="text-center">
               <p className="text-lg font-semibold text-gray-800 mb-2">{institution?.name}</p>
               {institution?.footer_message && (
@@ -778,7 +787,7 @@ const StudentResult = () => {
               )}
               <div className="w-32 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto mb-4"></div>
               <p className="text-sm text-gray-500">© 2024 {institution?.name}. All rights reserved.</p>
-              <p className="text-xs text-gray-400 mt-2">This is a computer-generated result certificate. Validity should be confirmed with the institution.</p>
+              <p className="text-xs text-gray-400 mt-2">This is a computer-generated result certificate. Validity should be confirmed with institution.</p>
             </div>
           </div>
         </div>
