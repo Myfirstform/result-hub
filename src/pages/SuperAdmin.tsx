@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Building, Users, TrendingUp, Search, Filter, Download, RefreshCw, Mail, Phone, Globe, Shield, AlertCircle, CheckCircle, Crown, Sparkles, Eye, EyeOff, MoreHorizontal } from "lucide-react";
+import { Plus, Pencil, Trash2, Building, Users, TrendingUp, Search, Filter, Download, RefreshCw, Mail, Phone, Globe, Shield, AlertCircle, CheckCircle, Crown, Sparkles, Eye, EyeOff, MoreHorizontal, ImageIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 
