@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown, Share2 } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface InstitutionInfo {
   id: string;
@@ -127,118 +129,63 @@ const StudentResult = () => {
     fetchInstitution();
   }, [slug]);
 
-  const handleDownload = () => {
+  const handleDownloadPDF = async () => {
     if (!result || !institution) return;
     
-    // Create comprehensive result data for download
-    const downloadData = {
-      institution: {
-        name: institution.name,
-        logo_url: institution.logo_url,
-        footer_message: institution.footer_message
-      },
-      student: {
-        name: result.student_name,
-        register_number: result.register_number,
-        class: result.class,
-        total: result.total,
-        grade: result.grade,
-        rank: result.rank
-      },
-      subjects: result.subjects || [],
-      passMarks: passMarks || [],
-      generated_at: new Date().toLocaleString(),
-      download_date: new Date().toISOString().split('T')[0]
-    };
-    
-    // Create formatted content
-    const content = formatResultForDownload(downloadData);
-    
-    // Create and download file
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${result.student_name}_${result.register_number}_Result.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    toast({ title: "Download started", description: "Your result is being downloaded" });
-  };
-
-  const formatResultForDownload = (data: any) => {
-    const separator = '='.repeat(80);
-    const newline = '\n';
-    
-    let content = [];
-    
-    // Header
-    content.push(separator);
-    content.push(`${data.institution.name.toUpperCase()}`);
-    content.push('ACADEMIC RESULT CERTIFICATE');
-    content.push(separator);
-    content.push(newline);
-    
-    // Student Information
-    content.push('STUDENT INFORMATION');
-    content.push('-'.repeat(50));
-    content.push(`Name: ${data.student.name}`);
-    content.push(`Register Number: ${data.student.register_number}`);
-    if (data.student.class) content.push(`Class: ${data.student.class}`);
-    content.push(newline);
-    
-    // Subject Results
-    content.push('SUBJECT-WISE PERFORMANCE');
-    content.push('-'.repeat(50));
-    content.push(newline);
-    
-    if (data.subjects.length > 0) {
-      content.push('Subject'.padEnd(20) + 'Marks'.padEnd(10) + 'Status'.padEnd(10));
-      content.push('-'.repeat(50));
+    try {
+      toast({ title: "Generating PDF", description: "Please wait while we create your result PDF..." });
       
-      data.subjects.forEach((subject: any) => {
-        const passMark = data.passMarks.find((pm: any) => pm.subject === subject.name);
-        const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-        const statusDisplay = status === 'PASS' ? '✓ PASS' : '✗ FAIL';
-        
-        content.push(
-          subject.name.padEnd(20) + 
-          subject.marks.toString().padEnd(10) + 
-          statusDisplay.padEnd(10)
-        );
+      // Get the print element
+      const element = document.getElementById('result-certificate');
+      if (!element) {
+        toast({ title: "Error", description: "Could not find result certificate element", variant: "destructive" });
+        return;
+      }
+      
+      // Generate canvas from the element
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
       });
-    } else {
-      content.push('No subjects data available');
+      
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      
+      let position = 0;
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Add new page if content exceeds one page
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      // Save PDF
+      const fileName = `${result.student_name}_${result.register_number}_Result.pdf`;
+      pdf.save(fileName);
+      
+      toast({ title: "Download Complete", description: "Your result PDF has been downloaded successfully" });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({ 
+        title: "Download Failed", 
+        description: "Failed to generate PDF. Please try again.", 
+        variant: "destructive" 
+      });
     }
-    
-    content.push(newline);
-    
-    // Summary
-    content.push('SUMMARY');
-    content.push('-'.repeat(50));
-    if (data.student.total !== null) content.push(`Total Marks: ${data.student.total}`);
-    if (data.student.grade) content.push(`Grade: ${data.student.grade}`);
-    if (data.student.rank) content.push(`Rank: ${data.student.rank}`);
-    content.push(newline);
-    
-    // Institution Info
-    content.push('INSTITUTION DETAILS');
-    content.push('-'.repeat(50));
-    content.push(`Institution: ${data.institution.name}`);
-    if (data.institution.footer_message) {
-      content.push(`Message: ${data.institution.footer_message}`);
-    }
-    content.push(newline);
-    
-    // Footer
-    content.push(separator);
-    content.push(`Generated on: ${data.generated_at}`);
-    content.push(`Download Date: ${data.download_date}`);
-    content.push(separator);
-    
-    return content.join(newline);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -711,122 +658,128 @@ const StudentResult = () => {
                 </CardContent>
               </Card>
 
-              {/* Comprehensive Print Layout - Hidden from screen, visible in print */}
-      <div className="hidden print:block">
-        <div className="p-8 text-black">
-          {/* Print Header */}
-          <div className="text-center mb-8 border-b-4 border-black pb-4">
+              {/* Modern Print Layout - Hidden from screen, visible in print */}
+      <div id="result-certificate" className="hidden print:block">
+        <div className="min-h-screen bg-white p-8">
+          {/* Modern Header */}
+          <div className="text-center mb-8">
             {institution?.logo_url && (
-              <div className="mb-4">
-                <img src={institution.logo_url} alt={institution.name} className="h-20 mx-auto object-contain" />
+              <div className="mb-6">
+                <img src={institution.logo_url} alt={institution.name} className="h-24 mx-auto object-contain" />
               </div>
             )}
-            <h1 className="text-3xl font-bold mb-2">{institution?.name}</h1>
-            <h2 className="text-xl font-semibold mb-2">ACADEMIC RESULT CERTIFICATE</h2>
-            <div className="text-sm text-gray-600">
-              Generated on {new Date().toLocaleDateString()}
-            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">{institution?.name}</h1>
+            <div className="w-32 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto mb-4"></div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-1">ACADEMIC RESULT CERTIFICATE</h2>
+            <p className="text-sm text-gray-500">Generated on {new Date().toLocaleDateString()}</p>
           </div>
 
-          {/* Student Information */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">STUDENT INFORMATION</h3>
-            <div className="grid grid-cols-2 gap-4">
+          {/* Student Information Card */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-8 border border-blue-200">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+              Student Information
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <p><strong>Name:</strong> {result?.student_name}</p>
-                <p><strong>Register Number:</strong> {result?.register_number}</p>
-                {result?.class && <p><strong>Class:</strong> {result.class}</p>}
+                <p className="text-gray-700"><span className="font-semibold">Name:</span> {result?.student_name}</p>
+                <p className="text-gray-700"><span className="font-semibold">Register Number:</span> {result?.register_number}</p>
+                {result?.class && <p className="text-gray-700"><span className="font-semibold">Class:</span> {result.class}</p>}
               </div>
               <div className="text-right">
-                {result?.total !== null && <p><strong>Total Marks:</strong> {result.total}</p>}
-                {result?.grade && <p><strong>Grade:</strong> {result.grade}</p>}
-                {result?.rank && <p><strong>Rank:</strong> {result.rank}</p>}
+                {result?.total !== null && <p className="text-gray-700"><span className="font-semibold">Total Marks:</span> <span className="text-2xl font-bold text-blue-600">{result.total}</span></p>}
+                {result?.grade && <p className="text-gray-700"><span className="font-semibold">Grade:</span> <span className="text-xl font-bold text-green-600">{result.grade}</span></p>}
+                {result?.rank && <p className="text-gray-700"><span className="font-semibold">Rank:</span> <span className="text-xl font-bold text-purple-600">{result.rank}</span></p>}
               </div>
             </div>
           </div>
 
-          {/* Subject Results */}
+          {/* Subject Results Table */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUBJECT-WISE PERFORMANCE</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+              Subject Performance
+            </h3>
             {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
-              <table className="w-full border-collapse border border-black">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-black p-3 text-left font-bold">Subject</th>
-                    <th className="border border-black p-3 text-center font-bold">Marks Obtained</th>
-                    <th className="border border-black p-3 text-center font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.subjects.map((subject: any, index: number) => {
-                    const passMark = passMarks.find(pm => pm.subject === subject.name);
-                    const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-                    
-                    return (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="border border-black p-3">{subject.name}</td>
-                        <td className="border border-black p-3 text-center font-bold">{subject.marks}</td>
-                        <td className="border border-black p-3 text-center">
-                          <span className={`px-3 py-1 rounded font-bold ${
-                            status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="overflow-hidden rounded-lg border border-gray-200">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 border-b border-gray-200">Subject</th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 border-b border-gray-200">Marks Obtained</th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 border-b border-gray-200">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {result.subjects.map((subject: any, index: number) => {
+                      const passMark = passMarks.find(pm => pm.subject === subject.name);
+                      const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+                      
+                      return (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{subject.name}</td>
+                          <td className="px-6 py-4 text-sm text-center font-bold text-gray-900">{subject.marks}</td>
+                          <td className="px-6 py-4 text-sm text-center">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                              status === 'PASS' 
+                                ? 'bg-green-100 text-green-800 border border-green-200' 
+                                : 'bg-red-100 text-red-800 border border-red-200'
+                            }`}>
+                              {status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <p className="text-center text-gray-600">No subjects data available</p>
+              <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-gray-600">No subjects data available</p>
+              </div>
             )}
           </div>
 
-          {/* Summary */}
+          {/* Summary Cards */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUMMARY</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <div className="w-2 h-2 bg-purple-600 rounded-full mr-2"></div>
+              Performance Summary
+            </h3>
+            <div className="grid grid-cols-3 gap-6">
               {result?.total !== null && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Total Marks</p>
-                  <p className="text-2xl font-bold">{result.total}</p>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white text-center shadow-lg">
+                  <div className="text-3xl font-bold mb-2">{result.total}</div>
+                  <div className="text-blue-100">Total Marks</div>
                 </div>
               )}
               {result?.grade && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Grade</p>
-                  <p className="text-2xl font-bold">{result.grade}</p>
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white text-center shadow-lg">
+                  <div className="text-3xl font-bold mb-2">{result.grade}</div>
+                  <div className="text-green-100">Grade</div>
                 </div>
               )}
               {result?.rank && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Rank</p>
-                  <p className="text-2xl font-bold">{result.rank}</p>
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white text-center shadow-lg">
+                  <div className="text-3xl font-bold mb-2">{result.rank}</div>
+                  <div className="text-purple-100">Rank</div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Institution Details */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">INSTITUTION DETAILS</h3>
+          {/* Institution Footer */}
+          <div className="mt-12 pt-8 border-t-2 border-gray-300">
             <div className="text-center">
-              <p><strong>Institution:</strong> {institution?.name}</p>
+              <p className="text-lg font-semibold text-gray-800 mb-2">{institution?.name}</p>
               {institution?.footer_message && (
-                <p className="mt-2"><strong>Message:</strong> {institution.footer_message}</p>
+                <p className="text-gray-600 mb-4">"{institution.footer_message}"</p>
               )}
+              <div className="w-32 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto mb-4"></div>
+              <p className="text-sm text-gray-500">© 2024 {institution?.name}. All rights reserved.</p>
+              <p className="text-xs text-gray-400 mt-2">This is a computer-generated result certificate. Validity should be confirmed with the institution.</p>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-12 pt-8 border-t-2 border-black text-center">
-            <p className="text-sm text-gray-600">
-              © 2024 {institution?.name}. All rights reserved.
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              This is a computer-generated result certificate. Validity should be confirmed with the institution.
-            </p>
           </div>
         </div>
       </div>
@@ -842,12 +795,12 @@ const StudentResult = () => {
                   <span className="text-sm sm:text-base">Print Result</span>
                 </Button>
                 <Button 
-                  onClick={handleDownload} 
+                  onClick={handleDownloadPDF} 
                   variant="outline" 
                   className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
                 >
                   <Download className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base">Download Result</span>
+                  <span className="text-sm sm:text-base">Download PDF</span>
                 </Button>
                 <Button 
                   variant="outline" 
