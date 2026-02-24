@@ -62,62 +62,19 @@ const StudentResult = () => {
       try {
         console.log("Fetching institution for slug:", slug);
         
-        // Try multiple approaches to handle RLS blocking
-        let institutionData = null;
-        let lastError = null;
-        
-        // Approach 1: Direct query with status filter
-        const { data: data1, error: error1 } = await supabase
+        // Single optimized query with proper error handling
+        const { data: institutionData, error } = await supabase
           .from("institutions")
           .select("id, name, logo_url, footer_message, status")
           .eq("slug", slug)
           .maybeSingle();
         
-        console.log("Approach 1 result:", { data: data1, error: error1 });
-        
-        if (data1) {
-          institutionData = data1;
-        } else {
-          lastError = error1;
-          
-          // Approach 2: Query without status filter (more permissive)
-          const { data: data2, error: error2 } = await supabase
-            .from("institutions")
-            .select("id, name, logo_url, footer_message, slug, status")
-            .eq("slug", slug)
-            .maybeSingle();
-          
-          console.log("Approach 2 result:", { data: data2, error: error2 });
-          
-          if (data2) {
-            institutionData = data2;
-          } else {
-            lastError = error2;
-            
-            // Approach 3: Get all institutions and filter client-side
-            const { data: data3, error: error3 } = await supabase
-              .from("institutions")
-              .select("id, name, logo_url, footer_message, slug, status")
-              .eq("slug", slug);
-            
-            console.log("Approach 3 result:", { data: data3, error: error3 });
-            
-            if (data3 && data3.length > 0) {
-              institutionData = data3.find(inst => inst.slug === slug) || data3[0];
-            } else {
-              lastError = error3;
-            }
-          }
-        }
-        
-        console.log("Final institution data:", institutionData);
+        console.log("Institution query result:", { data: institutionData, error });
         
         if (institutionData) {
-          // Accept institution regardless of status - let RLS handle access control
-          console.log("Setting institution data:", institutionData);
           setInstitution(institutionData);
         } else {
-          console.log("All approaches failed, last error:", lastError);
+          console.log("Institution not found:", error);
           setNotFound(true);
         }
       } catch (err) {
@@ -134,241 +91,182 @@ const StudentResult = () => {
   const handleDownload = () => {
     if (!result || !institution) return;
     
-    // Create new PDF document
-    const pdf = new jsPDF();
-    
-    // Set font sizes and colors
-    const titleSize = 24;
-    const headerSize = 18;
-    const normalSize = 12;
-    const smallSize = 10;
-    
-    let yPosition = 20;
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 25;
-    const contentWidth = pageWidth - 2 * margin;
-    
-    // Helper function to add text with word wrap
-    const addText = (text: string, fontSize: number, x: number, y: number, maxWidth: number, align: 'left' | 'center' | 'right' = 'left', color: string = '#000000') => {
-      pdf.setFontSize(fontSize);
-      pdf.setTextColor(color);
-      const lines = pdf.splitTextToSize(text, maxWidth);
-      const textHeight = lines.length * fontSize * 0.35;
+    try {
+      // Create new PDF document
+      const pdf = new jsPDF();
       
-      lines.forEach((line: string, index: number) => {
-        const lineY = y + (index * fontSize * 0.35);
-        pdf.text(line, x, lineY, { align });
-      });
+      // Set font sizes and colors
+      const titleSize = 20;
+      const headerSize = 16;
+      const normalSize = 12;
+      const smallSize = 10;
       
-      return textHeight;
-    };
-    
-    // Add decorative border
-    pdf.setDrawColor(0, 102, 204); // Blue border
-    pdf.setLineWidth(2);
-    pdf.rect(15, 15, pageWidth - 30, pdf.internal.pageSize.getHeight() - 30);
-    
-    // Add inner decorative border
-    pdf.setDrawColor(200, 200, 200); // Light gray border
-    pdf.setLineWidth(0.5);
-    pdf.rect(20, 20, pageWidth - 40, pdf.internal.pageSize.getHeight() - 40);
-    
-    // Header Section with Background
-    pdf.setFillColor(0, 102, 204); // Blue background
-    pdf.noStroke();
-    pdf.rect(margin, yPosition, contentWidth, 40, 'F');
-    
-    // Institution Logo (if available)
-    if (institution.logo_url) {
-      try {
-        pdf.addImage(institution.logo_url, 'PNG', pageWidth / 2 - 20, yPosition + 5, 40, 30);
-      } catch (e) {
-        console.log('Could not add logo to PDF');
-      }
-    }
-    
-    yPosition += 45;
-    
-    // Institution Name
-    pdf.setFontSize(titleSize);
-    pdf.setFont(undefined, 'bold');
-    addText(institution.name.toUpperCase(), titleSize, pageWidth / 2, yPosition, contentWidth, 'center', '#FFFFFF');
-    yPosition += 12;
-    
-    pdf.setFontSize(headerSize);
-    addText('ACADEMIC RESULT CERTIFICATE', headerSize, pageWidth / 2, yPosition, contentWidth, 'center', '#FFFFFF');
-    yPosition += 20;
-    
-    // Add decorative line
-    pdf.setDrawColor(255, 215, 0); // Gold color
-    pdf.setLineWidth(1.5);
-    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 15;
-    
-    // Student Information Section with Background
-    pdf.setFillColor(245, 245, 245); // Light gray background
-    pdf.noStroke();
-    pdf.rect(margin, yPosition, contentWidth, 60, 'F');
-    
-    pdf.setFontSize(headerSize);
-    pdf.setFont(undefined, 'bold');
-    addText('STUDENT INFORMATION', headerSize, margin + 10, yPosition + 10, contentWidth, 'left', '#000000');
-    yPosition += 25;
-    
-    pdf.setFontSize(normalSize);
-    pdf.setFont(undefined, 'normal');
-    addText(`Name: ${result.student_name}`, normalSize, margin + 10, yPosition, contentWidth);
-    yPosition += 8;
-    addText(`Register Number: ${result.register_number}`, normalSize, margin + 10, yPosition, contentWidth);
-    yPosition += 8;
-    if (result.class) {
-      addText(`Class: ${result.class}`, normalSize, margin + 10, yPosition, contentWidth);
-      yPosition += 8;
-    }
-    yPosition += 15;
-    
-    // Subject Results Section
-    pdf.setFontSize(headerSize);
-    pdf.setFont(undefined, 'bold');
-    addText('SUBJECT-WISE PERFORMANCE', headerSize, margin, yPosition, contentWidth);
-    yPosition += 10;
-    
-    pdf.setDrawColor(0, 102, 204); // Blue line
-    pdf.setLineWidth(1);
-    pdf.line(margin, yPosition, margin + 150, yPosition);
-    yPosition += 10;
-    
-    if (result.subjects && result.subjects.length > 0) {
-      // Table headers with background
-      pdf.setFillColor(0, 102, 204); // Blue background
-      pdf.noStroke();
-      pdf.rect(margin, yPosition, contentWidth, 10, 'F');
+      let yPosition = 20;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+      const contentWidth = pageWidth - 2 * margin;
       
-      pdf.setFontSize(normalSize);
+      // Helper function to add text with word wrap
+      const addText = (text: string, fontSize: number, x: number, y: number, maxWidth: number, align: 'left' | 'center' | 'right' = 'left') => {
+        pdf.setFontSize(fontSize);
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        const textHeight = lines.length * fontSize * 0.35;
+        
+        lines.forEach((line: string, index: number) => {
+          const lineY = y + (index * fontSize * 0.35);
+          pdf.text(line, x, lineY, { align });
+        });
+        
+        return textHeight;
+      };
+      
+      // Header Section
+      pdf.setFontSize(titleSize);
       pdf.setFont(undefined, 'bold');
-      addText('Subject', normalSize, margin + 5, yPosition + 7, contentWidth / 3, 'left', '#FFFFFF');
-      addText('Marks', normalSize, margin + contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', '#FFFFFF');
-      addText('Status', normalSize, margin + 2 * contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', '#FFFFFF');
+      addText(institution.name.toUpperCase(), titleSize, pageWidth / 2, yPosition, contentWidth, 'center');
+      yPosition += 15;
+      
+      pdf.setFontSize(headerSize);
+      addText('ACADEMIC RESULT CERTIFICATE', headerSize, pageWidth / 2, yPosition, contentWidth, 'center');
+      yPosition += 20;
+      
+      // Add line separator
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 15;
+      
+      // Student Information Section
+      pdf.setFontSize(headerSize);
+      pdf.setFont(undefined, 'bold');
+      addText('STUDENT INFORMATION', headerSize, margin, yPosition, contentWidth);
       yPosition += 10;
       
-      // Table data with alternating colors
       pdf.setLineWidth(0.3);
-      result.subjects.forEach((subject: any, index: number) => {
-        const passMark = passMarks.find(pm => pm.subject === subject.name);
-        const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-        
-        // Alternate row colors
-        if (index % 2 === 0) {
-          pdf.setFillColor(248, 248, 248); // Light gray
-          pdf.noStroke();
-          pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-        }
-        
-        pdf.setFontSize(normalSize);
-        pdf.setFont(undefined, 'normal');
-        addText(subject.name, normalSize, margin + 5, yPosition + 6, contentWidth / 3, 'left');
-        addText(subject.marks.toString(), normalSize, margin + contentWidth / 3, yPosition + 6, contentWidth / 3, 'center');
-        
-        // Color code status
-        const statusColor = status === 'PASS' ? '#00AA00' : '#FF0000';
-        addText(status, normalSize, margin + 2 * contentWidth / 3, yPosition + 6, contentWidth / 3, 'center', statusColor);
-        
-        yPosition += 8;
-      });
-    } else {
-      addText('No subjects data available', normalSize, margin, yPosition, contentWidth);
-      yPosition += 8;
-    }
-    yPosition += 15;
-    
-    // Summary Section with Cards
-    pdf.setFontSize(headerSize);
-    pdf.setFont(undefined, 'bold');
-    addText('SUMMARY', headerSize, margin, yPosition, contentWidth);
-    yPosition += 10;
-    
-    pdf.setDrawColor(0, 102, 204); // Blue line
-    pdf.setLineWidth(1);
-    pdf.line(margin, yPosition, margin + 60, yPosition);
-    yPosition += 10;
-    
-    // Create summary boxes
-    const summaryData = [];
-    if (result.total !== null) summaryData.push({ label: 'Total Marks', value: result.total.toString() });
-    if (result.grade) summaryData.push({ label: 'Grade', value: result.grade });
-    if (result.rank) summaryData.push({ label: 'Rank', value: result.rank });
-    
-    const boxWidth = contentWidth / summaryData.length - 10;
-    summaryData.forEach((item, index) => {
-      const xPos = margin + (index * (boxWidth + 10));
-      
-      // Box background
-      pdf.setFillColor(0, 102, 204); // Blue background
-      pdf.noStroke();
-      pdf.rect(xPos, yPosition, boxWidth, 30, 'F');
-      
-      // Box border
-      pdf.setDrawColor(0, 51, 102); // Dark blue border
-      pdf.setLineWidth(1);
-      pdf.rect(xPos, yPosition, boxWidth, 30);
-      
-      // Text
-      pdf.setFontSize(smallSize);
-      pdf.setFont(undefined, 'normal');
-      addText(item.label, smallSize, xPos + boxWidth / 2, yPosition + 10, boxWidth, 'center', '#FFFFFF');
+      pdf.line(margin, yPosition, margin + 100, yPosition);
+      yPosition += 10;
       
       pdf.setFontSize(normalSize);
-      pdf.setFont(undefined, 'bold');
-      addText(item.value, normalSize, xPos + boxWidth / 2, yPosition + 20, boxWidth, 'center', '#FFFFFF');
-    });
-    
-    yPosition += 40;
-    
-    // Institution Details Section
-    pdf.setFontSize(headerSize);
-    pdf.setFont(undefined, 'bold');
-    addText('INSTITUTION DETAILS', headerSize, margin, yPosition, contentWidth);
-    yPosition += 10;
-    
-    pdf.setDrawColor(0, 102, 204); // Blue line
-    pdf.setLineWidth(1);
-    pdf.line(margin, yPosition, margin + 100, yPosition);
-    yPosition += 10;
-    
-    pdf.setFontSize(normalSize);
-    pdf.setFont(undefined, 'normal');
-    addText(`Institution: ${institution.name}`, normalSize, margin, yPosition, contentWidth);
-    yPosition += 8;
-    if (institution.footer_message) {
-      addText(`Message: ${institution.footer_message}`, normalSize, margin, yPosition, contentWidth);
+      pdf.setFont(undefined, 'normal');
+      addText(`Name: ${result.student_name}`, normalSize, margin, yPosition, contentWidth);
       yPosition += 8;
+      addText(`Register Number: ${result.register_number}`, normalSize, margin, yPosition, contentWidth);
+      yPosition += 8;
+      if (result.class) {
+        addText(`Class: ${result.class}`, normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      yPosition += 10;
+      
+      // Subject Results Section
+      pdf.setFontSize(headerSize);
+      pdf.setFont(undefined, 'bold');
+      addText('SUBJECT-WISE PERFORMANCE', headerSize, margin, yPosition, contentWidth);
+      yPosition += 10;
+      
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, margin + 120, yPosition);
+      yPosition += 10;
+      
+      if (result.subjects && result.subjects.length > 0) {
+        // Table headers
+        pdf.setFontSize(normalSize);
+        pdf.setFont(undefined, 'bold');
+        addText('Subject', normalSize, margin, yPosition, 60);
+        addText('Marks', normalSize, margin + 60, yPosition, 30);
+        addText('Status', normalSize, margin + 90, yPosition, 30);
+        yPosition += 8;
+        
+        pdf.setLineWidth(0.2);
+        pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 8;
+        
+        // Table data
+        pdf.setFontSize(normalSize);
+        pdf.setFont(undefined, 'normal');
+        result.subjects.forEach((subject: any) => {
+          const passMark = passMarks.find(pm => pm.subject === subject.name);
+          const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+          
+          addText(subject.name, normalSize, margin, yPosition, 60);
+          addText(subject.marks.toString(), normalSize, margin + 60, yPosition, 30);
+          addText(status, normalSize, margin + 90, yPosition, 30);
+          yPosition += 8;
+        });
+      } else {
+        addText('No subjects data available', normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      yPosition += 15;
+      
+      // Summary Section
+      pdf.setFontSize(headerSize);
+      pdf.setFont(undefined, 'bold');
+      addText('SUMMARY', headerSize, margin, yPosition, contentWidth);
+      yPosition += 10;
+      
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, margin + 50, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(normalSize);
+      pdf.setFont(undefined, 'normal');
+      if (result.total !== null) {
+        addText(`Total Marks: ${result.total}`, normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      if (result.grade) {
+        addText(`Grade: ${result.grade}`, normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      if (result.rank) {
+        addText(`Rank: ${result.rank}`, normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      yPosition += 15;
+      
+      // Institution Details Section
+      pdf.setFontSize(headerSize);
+      pdf.setFont(undefined, 'bold');
+      addText('INSTITUTION DETAILS', headerSize, margin, yPosition, contentWidth);
+      yPosition += 10;
+      
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, margin + 80, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(normalSize);
+      pdf.setFont(undefined, 'normal');
+      addText(`Institution: ${institution.name}`, normalSize, margin, yPosition, contentWidth);
+      yPosition += 8;
+      if (institution.footer_message) {
+        addText(`Message: ${institution.footer_message}`, normalSize, margin, yPosition, contentWidth);
+        yPosition += 8;
+      }
+      yPosition += 15;
+      
+      // Footer
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 15;
+      
+      pdf.setFontSize(smallSize);
+      pdf.setFont(undefined, 'italic');
+      addText(`Generated on: ${new Date().toLocaleString()}`, smallSize, margin, yPosition, contentWidth);
+      yPosition += 6;
+      addText(`Download Date: ${new Date().toISOString().split('T')[0]}`, smallSize, margin, yPosition, contentWidth);
+      
+      // Save the PDF
+      pdf.save(`${result.student_name}_${result.register_number}_Result.pdf`);
+      
+      toast({ title: "Download successful", description: "Your result PDF has been downloaded" });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({ 
+        title: "Download failed", 
+        description: "There was an error generating your PDF. Please try again.", 
+        variant: "destructive" 
+      });
     }
-    yPosition += 15;
-    
-    // Footer with watermark
-    pdf.setDrawColor(255, 215, 0); // Gold color
-    pdf.setLineWidth(1.5);
-    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 15;
-    
-    pdf.setFontSize(smallSize);
-    pdf.setFont(undefined, 'italic');
-    addText(`Generated on: ${new Date().toLocaleString()}`, smallSize, margin, yPosition, contentWidth);
-    yPosition += 6;
-    addText(`Download Date: ${new Date().toISOString().split('T')[0]}`, smallSize, margin, yPosition, contentWidth);
-    
-    // Add watermark
-    pdf.setFontSize(50);
-    pdf.setTextColor(230, 230, 230); // Light gray
-    pdf.saveGraphicsState();
-    pdf.setGState(new pdf.GState({ opacity: 0.1 }));
-    addText('OFFICIAL DOCUMENT', 50, pageWidth / 2, pdf.internal.pageSize.getHeight() / 2, contentWidth, 'center', '#CCCCCC');
-    pdf.restoreGraphicsState();
-    
-    // Save the PDF
-    pdf.save(`${result.student_name}_${result.register_number}_Result.pdf`);
-    
-    toast({ title: "Download started", description: "Your professional result PDF is being downloaded" });
   };
 
   const handleSearch = async (e: React.FormEvent) => {
