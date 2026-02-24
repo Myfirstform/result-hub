@@ -566,6 +566,52 @@ const StudentResult = () => {
           ) : (
             <div className="space-y-8 print:space-y-4" id="result-card">
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-6 sm:pb-10">
+                  <div className="text-center space-y-4 sm:space-y-6">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+                      {(institution?.logo_url || defaultLogoUrl) && (
+                        <div className="relative">
+                          <img 
+                            src={institution?.logo_url || defaultLogoUrl} 
+                            alt={institution?.name || "Institution"} 
+                            className="max-w-[80px] sm:max-w-[140px] h-auto object-contain drop-shadow-lg" 
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== defaultLogoUrl) {
+                                target.src = defaultLogoUrl;
+                              }
+                            }}
+                          />
+                          <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl opacity-20 blur-xl sm:blur-2xl"></div>
+                        </div>
+                      )}
+                      <div className="relative inline-flex items-center justify-center">
+                        <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur-sm shadow-xl sm:shadow-2xl">
+                          <Trophy className="h-8 w-8 sm:h-12 sm:w-12 text-yellow-300" />
+                        </div>
+                        <div className="absolute -inset-4 sm:-inset-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3 sm:space-y-4 px-4">
+                      <CardTitle className="text-xl sm:text-3xl font-bold text-white">{institution?.name}</CardTitle>
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 border border-white/30">
+                        <h2 className="text-lg sm:text-2xl font-bold text-white">{result.student_name}</h2>
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-white/90">
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-white/20">
+                          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <span className="font-medium text-xs sm:text-sm sm:text-base">Reg: <span className="font-mono font-bold">{result.register_number}</span></span>
+                        </div>
+                        {result.class && (
+                          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-white/20">
+                            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <span className="font-medium text-xs sm:text-sm sm:text-base">Class: {result.class}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-6 sm:p-10 space-y-8 sm:space-y-10">
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
                     <div className="space-y-6">
