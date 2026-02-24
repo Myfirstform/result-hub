@@ -98,6 +98,8 @@ const InstitutionAdmin = () => {
     if (!institutionId) return;
     setLoadingInstitution(true);
     
+    console.log("Fetching institution data for ID:", institutionId);
+    
     try {
       const { data, error } = await supabase
         .from("institutions")
@@ -105,12 +107,25 @@ const InstitutionAdmin = () => {
         .eq("id", institutionId)
         .single();
       
-      if (error) throw error;
+      console.log("Fetch result:", { data, error });
+      
+      if (error) {
+        console.error("Database fetch error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error("No institution data found");
+        throw new Error("Institution not found");
+      }
+      
+      console.log("Setting institution data:", data);
+      console.log("Setting logo URL:", data?.logo_url);
       setInstitutionData(data);
       setLogoUrl(data?.logo_url || "");
     } catch (error: any) {
       console.error("Error fetching institution data:", error);
-      toast({ title: "Error loading institution data", variant: "destructive" });
+      toast({ title: "Error loading institution data", description: error.message, variant: "destructive" });
     } finally {
       setLoadingInstitution(false);
     }
@@ -119,19 +134,42 @@ const InstitutionAdmin = () => {
   const handleUpdateLogo = async () => {
     if (!institutionId) return;
     
+    console.log("Updating logo for institution:", institutionId);
+    console.log("New logo URL:", logoUrl);
+    
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("institutions")
         .update({ logo_url: logoUrl || null })
-        .eq("id", institutionId);
+        .eq("id", institutionId)
+        .select()
+        .single();
       
-      if (error) throw error;
+      console.log("Update result:", { data, error });
       
-      toast({ title: "Logo updated successfully" });
+      if (error) {
+        console.error("Database update error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error("No data returned from update");
+        throw new Error("No data returned from update operation");
+      }
+      
+      toast({ title: "Logo updated successfully", description: "Logo URL has been updated in the database" });
       setLogoDialogOpen(false);
-      fetchInstitutionData();
+      
+      // Fetch fresh data to verify the update
+      console.log("Fetching fresh institution data...");
+      await fetchInstitutionData();
     } catch (error: any) {
-      toast({ title: "Error updating logo", description: error.message, variant: "destructive" });
+      console.error("Error updating logo:", error);
+      toast({ 
+        title: "Error updating logo", 
+        description: error.message || "Unknown error occurred", 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -195,7 +233,11 @@ const InstitutionAdmin = () => {
   useEffect(() => { fetchResults(); }, [institutionId, user?.id]);
   useEffect(() => { fetchPassMarks(); }, [institutionId, user?.id]);
   useEffect(() => { fetchAvailableClassesAndSubjects(); }, [results]);
-  useEffect(() => { fetchInstitutionData(); }, [institutionId]);
+  useEffect(() => { 
+    console.log("InstitutionAdmin useEffect - institutionId:", institutionId);
+    console.log("InstitutionAdmin useEffect - user:", user?.id);
+    fetchInstitutionData(); 
+  }, [institutionId]);
 
 
 
