@@ -150,6 +150,22 @@ const StudentResult = () => {
       
       yPosition += 8;
       
+      // Add institution logo if available
+      if (institution.logo_url) {
+        try {
+          // Add logo above institution name
+          const logoSize = 25;
+          const logoX = pageWidth / 2 - logoSize / 2;
+          pdf.addImage(institution.logo_url, 'PNG', logoX, yPosition - 5, logoSize, logoSize);
+          yPosition += logoSize + 5;
+        } catch (e) {
+          console.log('Could not add logo to PDF:', e);
+          yPosition += 8;
+        }
+      } else {
+        yPosition += 8;
+      }
+      
       // Institution name
       addStyledText(institution.name.toUpperCase(), 18, pageWidth / 2, yPosition, contentWidth, 'center', [255, 255, 255], true);
       yPosition += 12;
@@ -762,120 +778,161 @@ const StudentResult = () => {
 
               {/* Comprehensive Print Layout - Hidden from screen, visible in print */}
       <div className="hidden print:block">
-        <div className="p-8 text-black">
-          {/* Print Header */}
-          <div className="text-center mb-8 border-b-4 border-black pb-4">
-            {institution?.logo_url && (
-              <div className="mb-4">
-                <img src={institution.logo_url} alt={institution.name} className="h-20 mx-auto object-contain" />
-              </div>
-            )}
-            <h1 className="text-3xl font-bold mb-2">{institution?.name}</h1>
-            <h2 className="text-xl font-semibold mb-2">ACADEMIC RESULT CERTIFICATE</h2>
-            <div className="text-sm text-gray-600">
-              Generated on {new Date().toLocaleDateString()}
-            </div>
-          </div>
-
-          {/* Student Information */}
+        <div className="p-8 text-black bg-white">
+          {/* Modern Print Header */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">STUDENT INFORMATION</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p><strong>Name:</strong> {result?.student_name}</p>
-                <p><strong>Register Number:</strong> {result?.register_number}</p>
-                {result?.class && <p><strong>Class:</strong> {result.class}</p>}
-              </div>
-              <div className="text-right">
-                {result?.total !== null && <p><strong>Total Marks:</strong> {result.total}</p>}
-                {result?.grade && <p><strong>Grade:</strong> {result.grade}</p>}
-                {result?.rank && <p><strong>Rank:</strong> {result.rank}</p>}
+            {/* Top decorative bar */}
+            <div className="h-4 bg-blue-600 rounded-t-lg"></div>
+            
+            {/* Header content */}
+            <div className="bg-blue-600 px-8 py-6 rounded-b-lg">
+              <div className="text-center">
+                {institution?.logo_url && (
+                  <div className="mb-4">
+                    <img src={institution.logo_url} alt={institution.name} className="h-16 mx-auto object-contain" />
+                  </div>
+                )}
+                <h1 className="text-2xl font-bold text-white mb-2">{institution?.name?.toUpperCase()}</h1>
+                <h2 className="text-lg text-white font-medium">ACADEMIC RESULT CERTIFICATE</h2>
               </div>
             </div>
           </div>
 
-          {/* Subject Results */}
+          {/* Modern Student Information */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUBJECT-WISE PERFORMANCE</h3>
-            {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
-              <table className="w-full border-collapse border border-black">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-black p-3 text-left font-bold">Subject</th>
-                    <th className="border border-black p-3 text-center font-bold">Marks Obtained</th>
-                    <th className="border border-black p-3 text-center font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.subjects.map((subject: any, index: number) => {
-                    const passMark = passMarks.find(pm => pm.subject === subject.name);
-                    const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-                    
-                    return (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="border border-black p-3">{subject.name}</td>
-                        <td className="border border-black p-3 text-center font-bold">{subject.marks}</td>
-                        <td className="border border-black p-3 text-center">
-                          <span className={`px-3 py-1 rounded font-bold ${
-                            status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {status}
-                          </span>
-                        </td>
+            <div className="bg-gray-100 px-6 py-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-4 text-gray-800">STUDENT INFORMATION</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-600">Student Name:</span>
+                    <span className="font-bold text-gray-900">{result?.student_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-600">Register Number:</span>
+                    <span className="font-bold text-gray-900 font-mono">{result?.register_number}</span>
+                  </div>
+                  {result?.class && (
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-gray-600">Class:</span>
+                      <span className="font-bold text-gray-900">{result.class}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Modern Subject Performance */}
+          <div className="mb-8">
+            <div className="bg-gray-100 px-6 py-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-4 text-gray-800">SUBJECT PERFORMANCE</h3>
+              {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
+                <div className="overflow-hidden rounded-lg border-2 border-gray-300">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-blue-600">
+                        <th className="px-4 py-3 text-left text-white font-bold">Subject</th>
+                        <th className="px-4 py-3 text-center text-white font-bold">Marks</th>
+                        <th className="px-4 py-3 text-center text-white font-bold">Grade</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <p className="text-center text-gray-600">No subjects data available</p>
-            )}
-          </div>
-
-          {/* Summary */}
-          <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUMMARY</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {result?.total !== null && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Total Marks</p>
-                  <p className="text-2xl font-bold">{result.total}</p>
+                    </thead>
+                    <tbody>
+                      {result.subjects.map((subject: any, index: number) => {
+                        const passMark = passMarks.find(pm => pm.subject === subject.name);
+                        const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+                        const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : 'A+';
+                        
+                        return (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            <td className="px-4 py-3 border-t border-gray-200 font-medium">{subject.name}</td>
+                            <td className="px-4 py-3 border-t border-gray-200 text-center">
+                              <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
+                                subject.marks >= 80 ? 'bg-green-100 text-green-800' :
+                                subject.marks >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {subject.marks}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 border-t border-gray-200 text-center">
+                              <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
+                                status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {grade}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-              {result?.grade && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Grade</p>
-                  <p className="text-2xl font-bold">{result.grade}</p>
-                </div>
-              )}
-              {result?.rank && (
-                <div className="text-center p-4 bg-gray-100 rounded">
-                  <p className="text-sm text-gray-600">Rank</p>
-                  <p className="text-2xl font-bold">{result.rank}</p>
-                </div>
+              ) : (
+                <p className="text-center text-gray-600 py-8">No subjects data available</p>
               )}
             </div>
           </div>
 
-          {/* Institution Details */}
+          {/* Modern Summary Cards */}
           <div className="mb-8">
-            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">INSTITUTION DETAILS</h3>
-            <div className="text-center">
-              <p><strong>Institution:</strong> {institution?.name}</p>
-              {institution?.footer_message && (
-                <p className="mt-2"><strong>Message:</strong> {institution.footer_message}</p>
-              )}
+            <div className="bg-gray-100 px-6 py-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-4 text-gray-800">ACADEMIC SUMMARY</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {result?.total !== null && (
+                  <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600 mb-2">{result.total}</div>
+                      <div className="text-sm text-gray-600">Total Marks</div>
+                    </div>
+                  </div>
+                )}
+                {result?.grade && (
+                  <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600 mb-2">{result.grade}</div>
+                      <div className="text-sm text-gray-600">Grade</div>
+                    </div>
+                  </div>
+                )}
+                {result?.rank && (
+                  <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-amber-600 mb-2">{result.rank}</div>
+                      <div className="text-sm text-gray-600">Rank</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="mt-12 pt-8 border-t-2 border-black text-center">
-            <p className="text-sm text-gray-600">
-              © 2024 {institution?.name}. All rights reserved.
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              This is a computer-generated result certificate. Validity should be confirmed with the institution.
-            </p>
+          {/* Modern Institution Details */}
+          <div className="mb-8">
+            <div className="bg-gray-100 px-6 py-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-4 text-gray-800">INSTITUTION DETAILS</h3>
+              <div className="text-center space-y-2">
+                <div>
+                  <span className="font-semibold text-gray-600">Institution:</span>
+                  <span className="font-bold text-gray-900"> {institution?.name}</span>
+                </div>
+                {institution?.footer_message && (
+                  <div>
+                    <span className="font-semibold text-gray-600">Message:</span>
+                    <span className="text-gray-900"> {institution.footer_message}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Modern Footer */}
+          <div className="mt-12 pt-8 border-t-4 border-gray-300">
+            <div className="text-center space-y-2">
+              <div className="text-lg font-bold text-gray-800">{institution?.name}</div>
+              <div className="text-sm text-gray-600">Official Result Certificate</div>
+              <div className="text-xs text-gray-500">Generated on {new Date().toLocaleDateString()}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -883,17 +940,17 @@ const StudentResult = () => {
       {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-8">
             <Button 
-              onClick={handleDownload} 
+              onClick={() => window.print()} 
               className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="relative flex items-center gap-3 sm:gap-4">
                 <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  <Download className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <Printer className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="text-left">
-                  <span className="text-sm sm:text-base font-bold block">Download Certificate</span>
-                  <span className="text-xs sm:text-sm opacity-90">Professional PDF Format</span>
+                  <span className="text-sm sm:text-base font-bold block">Print Certificate</span>
+                  <span className="text-xs sm:text-sm opacity-90">Professional Format</span>
                 </div>
               </div>
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
