@@ -152,12 +152,13 @@ const InstitutionAdmin = () => {
         throw error;
       }
       
-      if (!data || data.length === 0) {
+      if (!data) {
         console.error("No data returned from update");
         throw new Error("No data returned from update operation");
       }
       
-      const updatedData = data[0];
+      // Parse the JSON result
+      const updatedData = typeof data === 'string' ? JSON.parse(data) : data;
       console.log("Updated institution data:", updatedData);
       
       toast({ title: "Logo updated successfully", description: "Logo URL has been updated in the database" });

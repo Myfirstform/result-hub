@@ -5,15 +5,11 @@ CREATE OR REPLACE FUNCTION update_institution_logo(
   p_institution_id UUID,
   p_logo_url TEXT DEFAULT NULL
 )
-RETURNS TABLE (
-  id UUID,
-  name TEXT,
-  logo_url TEXT,
-  updated_at TIMESTAMPTZ
-) AS $$
+RETURNS JSON AS $$
 DECLARE
   v_user_id UUID;
   v_is_admin BOOLEAN;
+  v_result JSON;
 BEGIN
   -- Get current user ID
   v_user_id := auth.uid();
@@ -27,12 +23,21 @@ BEGIN
   
   -- Only allow update if user is admin
   IF v_is_admin THEN
-    RETURN QUERY
+    SELECT json_build_object(
+      'id', id,
+      'name', name,
+      'logo_url', logo_url,
+      'updated_at', updated_at
+    ) INTO v_result
+    FROM institutions 
+    WHERE id = p_institution_id;
+    
     UPDATE institutions 
     SET logo_url = p_logo_url,
         updated_at = NOW()
-    WHERE id = p_institution_id
-    RETURNING institutions.id, institutions.name, institutions.logo_url, institutions.updated_at;
+    WHERE id = p_institution_id;
+    
+    RETURN v_result;
   ELSE
     RAISE EXCEPTION 'Permission denied: User is not an admin for this institution';
   END IF;
