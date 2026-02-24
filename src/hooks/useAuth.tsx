@@ -69,6 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (adminData) {
           console.log("Setting institutionId:", adminData.institution_id);
           setInstitutionId(adminData.institution_id);
+        } else {
+          console.log("No institution assignment found, but user has role");
+          // User has role but no institution assignment - this is okay for multi-institution access
         }
         return;
       }
@@ -80,16 +83,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId)
         .maybeSingle();
 
+      console.log("Orphaned admin check result:", { orphanedAdmin });
+
       if (orphanedAdmin) {
         console.log("Found orphaned institution admin, creating role entry");
         // Create missing user_roles entry
-        await supabase
+        const { error: insertError } = await supabase
           .from("user_roles")
           .insert({ user_id: userId, role: "institution_admin" });
+        
+        if (insertError) {
+          console.error("Failed to create user role entry:", insertError);
+        } else {
+          console.log("Successfully created user role entry");
+        }
         
         setRole("institution_admin");
         setInstitutionId(orphanedAdmin.institution_id);
         return;
+      }
+
+      // Additional fallback: Check if user exists in auth.users but has no roles
+      // Note: We can't use admin API from client side, so we'll use a different approach
+      const { data: userCheck } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (!userCheck) {
+        console.log("User exists in auth but has no roles - checking if they should be institution admin");
+        
+        // Check if there are any institutions this user should have access to
+        const { data: institutions } = await supabase
+          .from("institutions")
+          .select("id, name, slug")
+          .eq("status", "active")
+          .limit(1);
+        
+        if (institutions && institutions.length > 0) {
+          console.log("Found active institutions, auto-assigning institution admin role");
+          // Auto-assign institution admin role for users without roles
+          const { error: autoAssignError } = await supabase
+            .from("user_roles")
+            .insert({ user_id: userId, role: "institution_admin" });
+          
+          if (!autoAssignError) {
+            // Also create institution_admins entry
+            await supabase
+              .from("institution_admins")
+              .insert({ user_id: userId, institution_id: institutions[0].id });
+            
+            setRole("institution_admin");
+            setInstitutionId(institutions[0].id);
+            return;
+          }
+        }
       }
 
       console.log("No role found for user");
