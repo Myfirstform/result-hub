@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown } from "lucide-react";
+import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown, Share2 } from "lucide-react";
 
 interface InstitutionInfo {
   id: string;
@@ -126,6 +126,120 @@ const StudentResult = () => {
     
     fetchInstitution();
   }, [slug]);
+
+  const handleDownload = () => {
+    if (!result || !institution) return;
+    
+    // Create comprehensive result data for download
+    const downloadData = {
+      institution: {
+        name: institution.name,
+        logo_url: institution.logo_url,
+        footer_message: institution.footer_message
+      },
+      student: {
+        name: result.student_name,
+        register_number: result.register_number,
+        class: result.class,
+        total: result.total,
+        grade: result.grade,
+        rank: result.rank
+      },
+      subjects: result.subjects || [],
+      passMarks: passMarks || [],
+      generated_at: new Date().toLocaleString(),
+      download_date: new Date().toISOString().split('T')[0]
+    };
+    
+    // Create formatted content
+    const content = formatResultForDownload(downloadData);
+    
+    // Create and download file
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${result.student_name}_${result.register_number}_Result.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Download started", description: "Your result is being downloaded" });
+  };
+
+  const formatResultForDownload = (data: any) => {
+    const separator = '='.repeat(80);
+    const newline = '\n';
+    
+    let content = [];
+    
+    // Header
+    content.push(separator);
+    content.push(`${data.institution.name.toUpperCase()}`);
+    content.push('ACADEMIC RESULT CERTIFICATE');
+    content.push(separator);
+    content.push(newline);
+    
+    // Student Information
+    content.push('STUDENT INFORMATION');
+    content.push('-'.repeat(50));
+    content.push(`Name: ${data.student.name}`);
+    content.push(`Register Number: ${data.student.register_number}`);
+    if (data.student.class) content.push(`Class: ${data.student.class}`);
+    content.push(newline);
+    
+    // Subject Results
+    content.push('SUBJECT-WISE PERFORMANCE');
+    content.push('-'.repeat(50));
+    content.push(newline);
+    
+    if (data.subjects.length > 0) {
+      content.push('Subject'.padEnd(20) + 'Marks'.padEnd(10) + 'Status'.padEnd(10));
+      content.push('-'.repeat(50));
+      
+      data.subjects.forEach((subject: any) => {
+        const passMark = data.passMarks.find((pm: any) => pm.subject === subject.name);
+        const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+        const statusDisplay = status === 'PASS' ? '✓ PASS' : '✗ FAIL';
+        
+        content.push(
+          subject.name.padEnd(20) + 
+          subject.marks.toString().padEnd(10) + 
+          statusDisplay.padEnd(10)
+        );
+      });
+    } else {
+      content.push('No subjects data available');
+    }
+    
+    content.push(newline);
+    
+    // Summary
+    content.push('SUMMARY');
+    content.push('-'.repeat(50));
+    if (data.student.total !== null) content.push(`Total Marks: ${data.student.total}`);
+    if (data.student.grade) content.push(`Grade: ${data.student.grade}`);
+    if (data.student.rank) content.push(`Rank: ${data.student.rank}`);
+    content.push(newline);
+    
+    // Institution Info
+    content.push('INSTITUTION DETAILS');
+    content.push('-'.repeat(50));
+    content.push(`Institution: ${data.institution.name}`);
+    if (data.institution.footer_message) {
+      content.push(`Message: ${data.institution.footer_message}`);
+    }
+    content.push(newline);
+    
+    // Footer
+    content.push(separator);
+    content.push(`Generated on: ${data.generated_at}`);
+    content.push(`Download Date: ${data.download_date}`);
+    content.push(separator);
+    
+    return content.join(newline);
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -597,7 +711,127 @@ const StudentResult = () => {
                 </CardContent>
               </Card>
 
-              {/* Action Buttons */}
+              {/* Comprehensive Print Layout - Hidden from screen, visible in print */}
+      <div className="hidden print:block">
+        <div className="p-8 text-black">
+          {/* Print Header */}
+          <div className="text-center mb-8 border-b-4 border-black pb-4">
+            {institution?.logo_url && (
+              <div className="mb-4">
+                <img src={institution.logo_url} alt={institution.name} className="h-20 mx-auto object-contain" />
+              </div>
+            )}
+            <h1 className="text-3xl font-bold mb-2">{institution?.name}</h1>
+            <h2 className="text-xl font-semibold mb-2">ACADEMIC RESULT CERTIFICATE</h2>
+            <div className="text-sm text-gray-600">
+              Generated on {new Date().toLocaleDateString()}
+            </div>
+          </div>
+
+          {/* Student Information */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">STUDENT INFORMATION</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p><strong>Name:</strong> {result?.student_name}</p>
+                <p><strong>Register Number:</strong> {result?.register_number}</p>
+                {result?.class && <p><strong>Class:</strong> {result.class}</p>}
+              </div>
+              <div className="text-right">
+                {result?.total !== null && <p><strong>Total Marks:</strong> {result.total}</p>}
+                {result?.grade && <p><strong>Grade:</strong> {result.grade}</p>}
+                {result?.rank && <p><strong>Rank:</strong> {result.rank}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Subject Results */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUBJECT-WISE PERFORMANCE</h3>
+            {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
+              <table className="w-full border-collapse border border-black">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-black p-3 text-left font-bold">Subject</th>
+                    <th className="border border-black p-3 text-center font-bold">Marks Obtained</th>
+                    <th className="border border-black p-3 text-center font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.subjects.map((subject: any, index: number) => {
+                    const passMark = passMarks.find(pm => pm.subject === subject.name);
+                    const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+                    
+                    return (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <td className="border border-black p-3">{subject.name}</td>
+                        <td className="border border-black p-3 text-center font-bold">{subject.marks}</td>
+                        <td className="border border-black p-3 text-center">
+                          <span className={`px-3 py-1 rounded font-bold ${
+                            status === 'PASS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-center text-gray-600">No subjects data available</p>
+            )}
+          </div>
+
+          {/* Summary */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">SUMMARY</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {result?.total !== null && (
+                <div className="text-center p-4 bg-gray-100 rounded">
+                  <p className="text-sm text-gray-600">Total Marks</p>
+                  <p className="text-2xl font-bold">{result.total}</p>
+                </div>
+              )}
+              {result?.grade && (
+                <div className="text-center p-4 bg-gray-100 rounded">
+                  <p className="text-sm text-gray-600">Grade</p>
+                  <p className="text-2xl font-bold">{result.grade}</p>
+                </div>
+              )}
+              {result?.rank && (
+                <div className="text-center p-4 bg-gray-100 rounded">
+                  <p className="text-sm text-gray-600">Rank</p>
+                  <p className="text-2xl font-bold">{result.rank}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Institution Details */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4 border-b-2 border-black pb-2">INSTITUTION DETAILS</h3>
+            <div className="text-center">
+              <p><strong>Institution:</strong> {institution?.name}</p>
+              {institution?.footer_message && (
+                <p className="mt-2"><strong>Message:</strong> {institution.footer_message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-12 pt-8 border-t-2 border-black text-center">
+            <p className="text-sm text-gray-600">
+              © 2024 {institution?.name}. All rights reserved.
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              This is a computer-generated result certificate. Validity should be confirmed with the institution.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden">
                 <Button 
                   onClick={() => window.print()} 
@@ -606,6 +840,14 @@ const StudentResult = () => {
                 >
                   <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="text-sm sm:text-base">Print Result</span>
+                </Button>
+                <Button 
+                  onClick={handleDownload} 
+                  variant="outline" 
+                  className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+                >
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-sm sm:text-base">Download Result</span>
                 </Button>
                 <Button 
                   variant="outline" 
