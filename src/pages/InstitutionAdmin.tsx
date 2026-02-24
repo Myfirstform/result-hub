@@ -71,6 +71,12 @@ const InstitutionAdmin = () => {
 
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Institution settings state
+  const [institutionData, setInstitutionData] = useState<any>(null);
+  const [logoDialogOpen, setLogoDialogOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [loadingInstitution, setLoadingInstitution] = useState(false);
+
   // Pass marks state
   const [passMarks, setPassMarks] = useState<PassMark[]>([]);
   const [passMarksLoading, setPassMarksLoading] = useState(false);
@@ -87,6 +93,47 @@ const InstitutionAdmin = () => {
   const [selectedPassMarks, setSelectedPassMarks] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
+
+  const fetchInstitutionData = async () => {
+    if (!institutionId) return;
+    setLoadingInstitution(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("institutions")
+        .select("name, logo_url, footer_message")
+        .eq("id", institutionId)
+        .single();
+      
+      if (error) throw error;
+      setInstitutionData(data);
+      setLogoUrl(data?.logo_url || "");
+    } catch (error: any) {
+      console.error("Error fetching institution data:", error);
+      toast({ title: "Error loading institution data", variant: "destructive" });
+    } finally {
+      setLoadingInstitution(false);
+    }
+  };
+
+  const handleUpdateLogo = async () => {
+    if (!institutionId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("institutions")
+        .update({ logo_url: logoUrl || null })
+        .eq("id", institutionId);
+      
+      if (error) throw error;
+      
+      toast({ title: "Logo updated successfully" });
+      setLogoDialogOpen(false);
+      fetchInstitutionData();
+    } catch (error: any) {
+      toast({ title: "Error updating logo", description: error.message, variant: "destructive" });
+    }
+  };
 
   const fetchResults = async () => {
     if (!institutionId) return;
@@ -148,6 +195,7 @@ const InstitutionAdmin = () => {
   useEffect(() => { fetchResults(); }, [institutionId, user?.id]);
   useEffect(() => { fetchPassMarks(); }, [institutionId, user?.id]);
   useEffect(() => { fetchAvailableClassesAndSubjects(); }, [results]);
+  useEffect(() => { fetchInstitutionData(); }, [institutionId]);
 
 
 
@@ -745,6 +793,131 @@ const InstitutionAdmin = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Institution Settings Section */}
+          <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                    <ImageIcon className="h-5 w-5" style={{ color: 'rgba(59, 130, 246)' }} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-slate-900">Institution Settings</CardTitle>
+                    <p className="text-sm text-slate-600">Manage your institution's logo and branding</p>
+                  </div>
+                </div>
+                <Dialog open={logoDialogOpen} onOpenChange={setLogoDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                      style={{ backgroundColor: 'rgba(59, 130, 246)' }}
+                      onClick={() => setLogoUrl(institutionData?.logo_url || "")}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                      Edit Logo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md border-0 shadow-2xl">
+                    <DialogHeader className="pb-4">
+                      <DialogTitle className="text-xl font-semibold text-slate-900">Edit Institution Logo</DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Update your institution's logo URL. Leave empty to use default logo.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="logoUrl" className="text-sm font-medium text-slate-700">Logo URL</Label>
+                        <Input 
+                          id="logoUrl"
+                          type="url"
+                          value={logoUrl} 
+                          onChange={(e) => setLogoUrl(e.target.value)} 
+                          placeholder="https://example.com/logo.png"
+                          className="h-11 border-slate-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 rounded-lg"
+                        />
+                        <p className="text-xs text-slate-500">Enter a valid URL for your institution logo. If not provided, the default logo will be used.</p>
+                      </div>
+                      {logoUrl && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-slate-700">Preview</Label>
+                          <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                            <img 
+                              src={logoUrl} 
+                              alt="Logo preview" 
+                              className="max-h-20 mx-auto object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                              onLoad={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'block';
+                              }}
+                            />
+                            {!logoUrl && (
+                              <div className="text-center text-slate-500 text-sm">No logo preview available</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-3 pt-2">
+                        <Button 
+                          onClick={handleUpdateLogo} 
+                          className="flex-1 py-3 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                          style={{ backgroundColor: 'rgba(59, 130, 246)' }}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Update Logo
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setLogoDialogOpen(false)}
+                          className="flex-1 py-3 border-slate-300 hover:bg-slate-50 rounded-lg font-medium transition-all duration-200"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
+                    {(institutionData?.logo_url || "/icon.png") ? (
+                      <img 
+                        src={institutionData?.logo_url || "/icon.png"} 
+                        alt="Institution logo" 
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          if (target.src !== "/icon.png") {
+                            target.src = "/icon.png";
+                          }
+                        }}
+                      />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1">{institutionData?.name || "Loading..."}</h3>
+                  <p className="text-sm text-slate-600 mb-2">Current institution logo</p>
+                  {institutionData?.logo_url ? (
+                    <div className="text-xs text-slate-500">
+                      Logo URL: <span className="font-mono bg-slate-100 px-2 py-1 rounded">{institutionData.logo_url}</span>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-500">Using default logo</div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Pass Marks Management Section */}
           <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">

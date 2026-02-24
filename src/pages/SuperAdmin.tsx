@@ -22,7 +22,7 @@ const SuperAdmin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [form, setForm] = useState({ name: "", slug: "", contact_email: "", contact_phone: "", footer_message: "", admin_email: "", admin_password: "" });
+  const [form, setForm] = useState({ name: "", slug: "", contact_email: "", contact_phone: "", footer_message: "", admin_email: "", admin_password: "", logo_url: "" });
 
   const fetchInstitutions = async () => {
     const { data } = await supabase.from("institutions").select("*").order("created_at", { ascending: false });
@@ -33,7 +33,7 @@ const SuperAdmin = () => {
   useEffect(() => { fetchInstitutions(); }, []);
 
   const resetForm = () => {
-    setForm({ name: "", slug: "", contact_email: "", contact_phone: "", footer_message: "", admin_email: "", admin_password: "" });
+    setForm({ name: "", slug: "", contact_email: "", contact_phone: "", footer_message: "", admin_email: "", admin_password: "", logo_url: "" });
     setEditingId(null);
   };
 
@@ -49,6 +49,7 @@ const SuperAdmin = () => {
       const { error } = await supabase.from("institutions").update({
         name: form.name, slug: form.slug, contact_email: form.contact_email,
         contact_phone: form.contact_phone, footer_message: form.footer_message,
+        logo_url: form.logo_url || null,
       }).eq("id", editingId);
 
       if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
@@ -60,6 +61,7 @@ const SuperAdmin = () => {
         contact_email: form.contact_email,
         contact_phone: form.contact_phone, 
         footer_message: form.footer_message,
+        logo_url: form.logo_url || null,
         status: "active",
       }).select().single();
 
@@ -103,7 +105,7 @@ const SuperAdmin = () => {
     setForm({
       name: inst.name, slug: inst.slug, contact_email: inst.contact_email || "",
       contact_phone: inst.contact_phone || "", footer_message: inst.footer_message || "",
-      admin_email: "", admin_password: "",
+      admin_email: "", admin_password: "", logo_url: inst.logo_url || "",
     });
     setEditingId(inst.id);
     setDialogOpen(true);
@@ -156,7 +158,7 @@ const SuperAdmin = () => {
                       <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl border-0 shadow-2xl">
+                  <DialogContent className="max-w-2xl border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200 pb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
@@ -245,6 +247,21 @@ const SuperAdmin = () => {
                           className="h-11 border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl bg-white/80 backdrop-blur-sm transition-all duration-200"
                           placeholder="Enter footer message for result pages"
                         />
+                      </div>
+                      <div className="space-y-3">
+                        <Label htmlFor="logo_url" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <ImageIcon className="h-4 w-4 text-blue-600" />
+                          Logo URL (Optional)
+                        </Label>
+                        <Input 
+                          id="logo_url" 
+                          type="url"
+                          value={form.logo_url} 
+                          onChange={(e) => setForm({ ...form, logo_url: e.target.value })} 
+                          className="h-11 border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl bg-white/80 backdrop-blur-sm transition-all duration-200"
+                          placeholder="https://example.com/logo.png"
+                        />
+                        <p className="text-xs text-slate-500">Enter a URL for the institution logo. If not provided, a default logo will be used.</p>
                       </div>
                       {!editingId && (
                         <>
