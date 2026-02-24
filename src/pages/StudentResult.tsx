@@ -446,7 +446,7 @@ const StudentResult = () => {
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-start justify-start py-0 sm:py-16 px-4 print:py-4 relative">
+      <main className="flex-1 flex items-center justify-center py-0 sm:py-16 px-4 print:py-4 relative">
         <div className="w-full max-w-6xl space-y-2 sm:space-y-10 print:space-y-1">
           {!result ? (
             <div className="space-y-10">
