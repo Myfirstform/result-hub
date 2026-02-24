@@ -956,6 +956,40 @@ const StudentResult = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
             </Button>
             <Button 
+              onClick={() => {
+                const shareUrl = window.location.href;
+                const shareText = `Check out ${result?.student_name}'s academic result certificate from ${institution?.name}`;
+                
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'Academic Result Certificate',
+                    text: shareText,
+                    url: shareUrl
+                  });
+                } else {
+                  // Fallback: Copy to clipboard
+                  navigator.clipboard.writeText(shareUrl);
+                  toast({ 
+                    title: "Link Copied", 
+                    description: "Result page link copied to clipboard" 
+                  });
+                }
+              }}
+              className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative flex items-center gap-3 sm:gap-4">
+                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <div className="text-left">
+                  <span className="text-sm sm:text-base font-bold block">Share Result</span>
+                  <span className="text-xs sm:text-sm opacity-90">Modern & Professional</span>
+                </div>
+              </div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
+            </Button>
+            <Button 
               variant="outline" 
               onClick={() => setResult(null)} 
               className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
