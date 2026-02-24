@@ -418,24 +418,7 @@ const StudentResult = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8 print:border-0 relative">
         <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:gap-4">
-          {(institution?.logo_url || defaultLogoUrl) && (
-            <div className="relative">
-              <img 
-                src={institution?.logo_url || defaultLogoUrl} 
-                alt={institution?.name || "Institution"} 
-                className="max-w-[100px] sm:max-w-[140px] h-auto object-contain drop-shadow-lg" 
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== defaultLogoUrl) {
-                    target.src = defaultLogoUrl;
-                  }
-                }}
-              />
-              <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-10 blur-xl"></div>
-            </div>
-          )}
           <div className="text-center space-y-1 sm:space-y-2">
-            <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{institution?.name}</h1>
             <div className="flex items-center gap-2 justify-center">
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
               <p className="text-sm sm:text-lg text-slate-600 font-medium">Student Result Portal</p>
