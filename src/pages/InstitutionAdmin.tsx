@@ -138,12 +138,12 @@ const InstitutionAdmin = () => {
     console.log("New logo URL:", logoUrl);
     
     try {
+      // Use Supabase function to bypass RLS issues
       const { data, error } = await supabase
-        .from("institutions")
-        .update({ logo_url: logoUrl || null })
-        .eq("id", institutionId)
-        .select()
-        .single();
+        .rpc('update_institution_logo', {
+          p_institution_id: institutionId,
+          p_logo_url: logoUrl || null
+        });
       
       console.log("Update result:", { data, error });
       
@@ -152,17 +152,24 @@ const InstitutionAdmin = () => {
         throw error;
       }
       
-      if (!data) {
+      if (!data || data.length === 0) {
         console.error("No data returned from update");
         throw new Error("No data returned from update operation");
       }
       
+      const updatedData = data[0];
+      console.log("Updated institution data:", updatedData);
+      
       toast({ title: "Logo updated successfully", description: "Logo URL has been updated in the database" });
       setLogoDialogOpen(false);
       
-      // Fetch fresh data to verify the update
-      console.log("Fetching fresh institution data...");
-      await fetchInstitutionData();
+      // Update local state with the returned data
+      setInstitutionData(prev => ({
+        ...prev,
+        logo_url: updatedData.logo_url
+      }));
+      setLogoUrl(updatedData.logo_url || "");
+      
     } catch (error: any) {
       console.error("Error updating logo:", error);
       toast({ 
