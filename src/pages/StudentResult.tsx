@@ -626,9 +626,9 @@ const StudentResult = () => {
 
       {/* Header */}
 
-      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8 print:hidden relative">
+      <header className="text-card-foreground border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative mx-auto max-w-6xl mt-4 mb-6 print:hidden">
 
-        <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:gap-4">
+        <div className="px-4 py-6 sm:py-8 flex flex-col items-center gap-3 sm:gap-4">
 
           {(institution?.logo_url || defaultLogoUrl) && (
 
