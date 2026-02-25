@@ -1,1023 +1,1654 @@
 import { useEffect, useState } from "react";
+
 import { useParams } from "react-router-dom";
+
 import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
+
 import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { toast } from "@/hooks/use-toast";
-import { GraduationCap, Printer, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown, Share2 } from "lucide-react";
+
+import { GraduationCap, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown } from "lucide-react";
+
 import jsPDF from 'jspdf';
 
+
+
 interface InstitutionInfo {
+
   id: string;
+
   name: string;
+
   logo_url: string | null;
+
   footer_message: string | null;
+
 }
+
+
 
 interface ResultData {
+
   student_name: string;
+
   register_number: string;
+
   class: string | null;
+
   subjects: { name: string; marks: number }[];
+
   total: number | null;
+
   grade: string | null;
+
   rank: string | null;
+
 }
+
+
 
 interface PassMark {
+
   class: string;
+
   subject: string;
+
   pass_mark: number;
+
 }
+
+
 
 interface SubjectWithStatus {
+
   name: string;
+
   marks: number;
+
   status: 'pass' | 'fail';
+
   passMark: number;
+
 }
 
+
+
 const StudentResult = () => {
+
   const { slug } = useParams<{ slug: string }>();
+
   const [institution, setInstitution] = useState<InstitutionInfo | null>(null);
+
   const [notFound, setNotFound] = useState(false);
+
   const [regNumber, setRegNumber] = useState("");
+
   const [secretCode, setSecretCode] = useState("");
+
   const [result, setResult] = useState<ResultData | null>(null);
+
   const [searching, setSearching] = useState(false);
+
   const [loadingInst, setLoadingInst] = useState(true);
+
   const [passMarks, setPassMarks] = useState<PassMark[]>([]);
 
+
+
   // Default logo URL (using the website icon)
+
   const defaultLogoUrl = "/icon.png";
 
+
+
   useEffect(() => {
+
     if (!slug) return;
+
     
+
     const fetchInstitution = async () => {
+
       try {
+
         console.log("Fetching institution for slug:", slug);
+
         
+
         // Single optimized query with proper error handling
+
         const { data: institutionData, error } = await supabase
+
           .from("institutions")
+
           .select("id, name, logo_url, footer_message, status")
+
           .eq("slug", slug)
+
           .maybeSingle();
+
         
+
         console.log("Institution query result:", { data: institutionData, error });
+
         
+
         if (institutionData) {
+
           setInstitution(institutionData);
+
         } else {
+
           console.log("Institution not found:", error);
+
           setNotFound(true);
+
         }
+
       } catch (err) {
+
         console.error("Error fetching institution:", err);
+
         setNotFound(true);
+
       } finally {
+
         setLoadingInst(false);
+
       }
+
     };
+
     
+
     fetchInstitution();
+
   }, [slug]);
 
+
+
   const handleDownload = () => {
+
     if (!result || !institution) return;
+
     
+
     try {
+
       // Create new PDF document with better settings
+
       const pdf = new jsPDF({
+
         orientation: 'portrait',
+
         unit: 'mm',
+
         format: 'a4'
+
       });
+
       
+
       // Page dimensions
+
       const pageWidth = pdf.internal.pageSize.getWidth();
+
       const pageHeight = pdf.internal.pageSize.getHeight();
+
       const margin = 20;
+
       const contentWidth = pageWidth - 2 * margin;
+
       
+
       // Professional color scheme
+
       const colors = {
+
         primary: [41, 98, 255],     // Blue
+
         secondary: [239, 68, 68],     // Red
+
         accent: [34, 197, 94],      // Green
+
         dark: [31, 41, 55],          // Dark blue
+
         light: [248, 250, 252],      // Light gray
+
         gold: [255, 193, 7]          // Gold
+
       };
+
       
+
       let yPosition = 30;
+
       
+
       // Helper function for styled text
+
       const addStyledText = (text: string, fontSize: number, x: number, y: number, maxWidth: number, align: 'left' | 'center' | 'right' = 'left', color: number[] = [0, 0, 0], isBold: boolean = false) => {
+
         pdf.setFontSize(fontSize);
+
         if (isBold) pdf.setFont(undefined, 'bold');
+
         else pdf.setFont(undefined, 'normal');
+
         
+
         pdf.setTextColor(...color);
+
         const lines = pdf.splitTextToSize(text, maxWidth);
+
         
+
         lines.forEach((line: string, index: number) => {
+
           const lineY = y + (index * fontSize * 0.35);
+
           pdf.text(line, x, lineY, { align });
+
         });
+
         
+
         return lines.length * fontSize * 0.35;
+
       };
+
       
+
       // ===== HEADER SECTION =====
+
       // Top decorative bar
+
       pdf.setFillColor(...colors.primary);
+
       pdf.noStroke();
+
       pdf.rect(0, 0, pageWidth, 15);
+
       
+
       // White content area
+
       pdf.setFillColor(255, 255, 255);
+
       pdf.rect(0, 15, pageWidth, pageHeight - 15);
+
       
+
       // Institution header box
+
       pdf.setFillColor(...colors.primary);
+
       pdf.roundedRect(margin, yPosition, contentWidth, 35, 3);
+
       
+
       yPosition += 8;
+
       
+
       // Add institution logo if available
+
       if (institution.logo_url) {
+
         try {
+
           // Add logo above institution name
+
           const logoSize = 25;
+
           const logoX = pageWidth / 2 - logoSize / 2;
+
           pdf.addImage(institution.logo_url, 'PNG', logoX, yPosition - 5, logoSize, logoSize);
+
           yPosition += logoSize + 5;
+
         } catch (e) {
+
           console.log('Could not add logo to PDF:', e);
+
           yPosition += 8;
+
         }
+
       } else {
+
         yPosition += 8;
+
       }
+
       
+
       // Institution name
+
       addStyledText(institution.name.toUpperCase(), 18, pageWidth / 2, yPosition, contentWidth, 'center', [255, 255, 255], true);
+
       yPosition += 12;
+
       
+
       // Certificate title
+
       addStyledText('ACADEMIC RESULT CERTIFICATE', 14, pageWidth / 2, yPosition, contentWidth, 'center', [255, 255, 255]);
+
       yPosition += 15;
+
       
+
       // ===== STUDENT INFORMATION =====
+
       yPosition += 10;
+
       
+
       // Section header
+
       pdf.setFillColor(...colors.light);
+
       pdf.rect(margin, yPosition, contentWidth, 8);
+
       addStyledText('STUDENT INFORMATION', 12, margin + 5, yPosition + 6, contentWidth, 'left', colors.dark, true);
+
       yPosition += 15;
+
       
+
       // Student info cards
+
       const studentInfo = [
+
         { label: 'Student Name', value: result.student_name },
+
         { label: 'Register Number', value: result.register_number },
+
         { label: 'Class', value: result.class || 'N/A' }
+
       ];
+
       
+
       studentInfo.forEach((info, index) => {
+
         // Info row background
+
         if (index % 2 === 0) {
+
           pdf.setFillColor(248, 250, 252);
+
         } else {
+
           pdf.setFillColor(255, 255, 255);
+
         }
+
         pdf.rect(margin, yPosition, contentWidth, 12);
+
         
+
         // Label and value
+
         addStyledText(info.label + ':', 10, margin + 8, yPosition + 8, 50, 'left', colors.dark);
+
         addStyledText(info.value, 11, margin + 60, yPosition + 8, contentWidth - 68, 'left', [31, 41, 55]);
+
         
+
         yPosition += 12;
+
       });
+
       
+
       // ===== SUBJECT RESULTS =====
+
       yPosition += 15;
+
       
+
       // Section header
+
       pdf.setFillColor(...colors.light);
+
       pdf.rect(margin, yPosition, contentWidth, 8);
+
       addStyledText('SUBJECT PERFORMANCE', 12, margin + 5, yPosition + 6, contentWidth, 'left', colors.dark, true);
+
       yPosition += 15;
+
       
+
       // Table header
+
       pdf.setFillColor(...colors.primary);
+
       pdf.rect(margin, yPosition, contentWidth, 10);
+
       
+
       addStyledText('Subject', 10, margin + 5, yPosition + 7, contentWidth / 3, 'left', [255, 255, 255], true);
+
       addStyledText('Marks', 10, margin + contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', [255, 255, 255], true);
+
       addStyledText('Grade', 10, margin + 2 * contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', [255, 255, 255], true);
+
       
+
       yPosition += 10;
+
       
+
       // Table rows
+
       if (result.subjects && result.subjects.length > 0) {
+
         result.subjects.forEach((subject: any, index: number) => {
+
           const passMark = passMarks.find(pm => pm.subject === subject.name);
+
           const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
+
           const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : 'A+';
+
           
+
           // Alternating row colors
+
           if (index % 2 === 0) {
+
             pdf.setFillColor(248, 250, 252);
+
           } else {
+
             pdf.setFillColor(255, 255, 255);
+
           }
+
           pdf.rect(margin, yPosition, contentWidth, 10);
+
           
+
           // Subject name
+
           addStyledText(subject.name, 9, margin + 5, yPosition + 7, contentWidth / 3, 'left', colors.dark);
+
           
+
           // Marks with color coding
+
           let marksColor = colors.dark;
+
           if (subject.marks >= 80) marksColor = colors.accent;
+
           else if (subject.marks >= 60) marksColor = colors.gold;
+
           else if (subject.marks >= 40) marksColor = colors.secondary;
+
           
+
           addStyledText(subject.marks.toString(), 11, margin + contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', marksColor, true);
+
           
+
           // Status with color
+
           const statusColor = status === 'PASS' ? colors.accent : colors.secondary;
+
           addStyledText(status, 9, margin + 2 * contentWidth / 3, yPosition + 7, contentWidth / 3, 'center', statusColor, true);
+
           
+
           yPosition += 10;
+
         });
+
       } else {
+
         pdf.setFillColor(248, 250, 252);
+
         pdf.rect(margin, yPosition, contentWidth, 10);
+
         addStyledText('No subjects data available', 10, margin + 5, yPosition + 7, contentWidth, 'left', colors.dark);
+
         yPosition += 10;
+
       }
+
       
+
       // ===== SUMMARY SECTION =====
+
       yPosition += 20;
+
       
+
       // Section header
+
       pdf.setFillColor(...colors.light);
+
       pdf.rect(margin, yPosition, contentWidth, 8);
+
       addStyledText('ACADEMIC SUMMARY', 12, margin + 5, yPosition + 6, contentWidth, 'left', colors.dark, true);
+
       yPosition += 15;
+
       
+
       // Summary cards
+
       const summaryData = [];
+
       if (result.total !== null) summaryData.push({ label: 'Total Marks', value: result.total.toString(), icon: '📊' });
+
       if (result.grade) summaryData.push({ label: 'Grade', value: result.grade, icon: '🏆' });
+
       if (result.rank) summaryData.push({ label: 'Rank', value: result.rank.toString(), icon: '🥇' });
+
       
+
       const cardWidth = (contentWidth - 20) / summaryData.length - 10;
+
       
+
       summaryData.forEach((item, index) => {
+
         const xPos = margin + 10 + (index * (cardWidth + 10));
+
         
+
         // Card shadow
+
         pdf.setFillColor(240, 242, 247);
+
         pdf.roundedRect(xPos + 2, yPosition + 2, cardWidth, 30, 3);
+
         
+
         // Card background
+
         pdf.setFillColor(255, 255, 255);
+
         pdf.roundedRect(xPos, yPosition, cardWidth, 30, 3);
+
         
+
         // Card border
+
         pdf.setDrawColor(...colors.primary);
+
         pdf.setLineWidth(1);
+
         pdf.roundedRect(xPos, yPosition, cardWidth, 30, 3);
+
         
+
         // Content
+
         addStyledText(item.value, 16, xPos + cardWidth / 2, yPosition + 12, cardWidth, 'center', colors.primary, true);
+
         addStyledText(item.label, 8, xPos + cardWidth / 2, yPosition + 22, cardWidth, 'center', colors.dark);
+
         
+
         yPosition = Math.max(yPosition, yPosition + 40);
+
       });
+
       
+
       // ===== FOOTER =====
+
       yPosition = pageHeight - 40;
+
       
+
       // Footer line
+
       pdf.setDrawColor(...colors.gold);
+
       pdf.setLineWidth(2);
+
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+
       
+
       yPosition += 10;
+
       
+
       // Footer text
+
       addStyledText(institution.name, 8, pageWidth / 2, yPosition, contentWidth, 'center', colors.dark);
+
       addStyledText('Official Result Certificate', 6, pageWidth / 2, yPosition + 8, contentWidth, 'center', colors.dark);
+
       addStyledText(`Generated on ${new Date().toLocaleDateString()}`, 6, pageWidth / 2, yPosition + 16, contentWidth, 'center', colors.dark);
+
       
+
       // Save the PDF
+
       pdf.save(`${result.student_name}_${result.register_number}_Certificate.pdf`);
+
       
+
       toast({ 
+
         title: "✓ Download Successful", 
+
         description: "Professional certificate has been generated and downloaded" 
+
       });
+
     } catch (error) {
+
       console.error("PDF generation error:", error);
+
       toast({ 
+
         title: "✗ Download Failed", 
+
         description: "Unable to generate certificate. Please try again.", 
+
         variant: "destructive" 
+
       });
+
     }
+
   };
+
+
 
   const handleSearch = async (e: React.FormEvent) => {
+
     e.preventDefault();
+
     if (!institution) return;
+
     setSearching(true);
+
     setResult(null);
 
+
+
     await supabase.from("access_logs").insert({
+
       institution_id: institution.id,
+
       register_number: regNumber,
+
     });
 
+
+
     // Fetch student result
+
     const { data: resultData } = await supabase
+
       .from("student_results")
+
       .select("student_name, register_number, class, subjects, total, grade, rank")
+
       .eq("institution_id", institution.id)
+
       .eq("register_number", regNumber)
+
       .eq("secret_code", secretCode)
+
       .eq("published", true)
+
       .maybeSingle();
 
+
+
     if (resultData) {
+
       // For now, we'll use a default pass mark logic
+
       const defaultPassMarks = [
+
         { class: resultData.class, subject: "All Subjects", pass_mark: 35 }
+
       ];
+
       setPassMarks(defaultPassMarks);
+
       setResult(resultData as ResultData);
+
     } else {
+
       toast({ title: "No result found", description: "Check your register number and secret code.", variant: "destructive" });
+
     }
+
     setSearching(false);
+
   };
 
+
+
   if (loadingInst) {
+
     return (
+
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col">
+
         <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8">
+
           <div className="mx-auto max-w-6xl px-4 flex items-center gap-4 sm:gap-6">
+
             <div className="relative">
+
               <Skeleton className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl" />
+
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+
             </div>
+
             <div className="space-y-1 sm:space-y-2">
+
               <Skeleton className="h-6 w-48 sm:h-10 sm:w-80 rounded-lg sm:rounded-xl" />
+
               <Skeleton className="h-4 w-24 sm:h-5 sm:w-40 rounded-lg" />
+
             </div>
+
           </div>
+
         </header>
+
         <main className="flex-1 flex items-center justify-center py-8 sm:py-16 px-4">
+
           <div className="w-full max-w-5xl space-y-6 sm:space-y-8">
+
             <div className="text-center space-y-3 sm:space-y-4">
+
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-slate-200/50 shadow-lg">
+
                 <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-indigo-600" />
+
                 <span className="text-sm sm:text-base font-medium text-slate-700">Loading Portal...</span>
+
               </div>
+
               <div className="space-y-2 sm:space-y-3">
+
                 <Skeleton className="h-8 w-64 sm:h-12 sm:w-96 mx-auto rounded-lg sm:rounded-xl" />
+
                 <Skeleton className="h-4 w-48 sm:h-6 sm:w-64 mx-auto rounded-lg" />
+
               </div>
+
             </div>
+
             <div className="space-y-4 sm:space-y-6">
+
               <Skeleton className="h-32 sm:h-48 w-full rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600" />
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+
                 <Skeleton className="h-20 sm:h-24 w-full rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50" />
+
                 <Skeleton className="h-20 sm:h-24 w-full rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50" />
+
                 <Skeleton className="h-20 sm:h-24 w-full rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50" />
+
               </div>
+
             </div>
+
           </div>
+
         </main>
+
       </div>
+
     );
+
   }
+
+
 
   if (notFound) {
+
     return (
+
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center px-4">
+
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+
         <Card className="w-full max-w-2xl border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative">
+
           <CardContent className="p-8 sm:p-12 text-center space-y-6 sm:space-y-8">
+
             <div className="relative">
+
               <div className="mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-red-500 to-orange-600 w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center shadow-xl sm:shadow-2xl">
+
                 <SearchX className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
+
               </div>
+
               <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl"></div>
+
             </div>
+
             <div className="space-y-3 sm:space-y-4">
+
               <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Institution Not Found</h2>
+
               <p className="text-slate-600 leading-relaxed text-sm sm:text-lg max-w-md mx-auto">
+
                 The institution <span className="font-mono bg-red-50 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl text-red-600 font-semibold border border-red-200">{slug}</span> does not exist or is inactive.
+
               </p>
+
             </div>
+
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+
               <Button 
+
                 onClick={() => window.location.href = '/'}
+
                 className="px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+
               >
+
                 <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+
                 <span className="text-sm sm:text-base">Go to Homepage</span>
+
               </Button>
+
             </div>
+
           </CardContent>
+
         </Card>
+
       </div>
+
     );
+
   }
 
+
+
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col relative">
+
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+
       
+
       {/* Header */}
+
       <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200/50 shadow-lg py-4 sm:py-8 print:hidden relative">
+
         <div className="mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 sm:gap-4">
+
           {(institution?.logo_url || defaultLogoUrl) && (
+
             <div className="relative">
+
               <img 
+
                 src={institution?.logo_url || defaultLogoUrl} 
+
                 alt={institution?.name || "Institution"} 
+
                 className="max-w-[100px] sm:max-w-[140px] h-auto object-contain drop-shadow-lg" 
+
                 onError={(e) => {
+
                   const target = e.target as HTMLImageElement;
+
                   if (target.src !== defaultLogoUrl) {
+
                     target.src = defaultLogoUrl;
+
                   }
+
                 }}
+
               />
+
               <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-10 blur-xl"></div>
+
             </div>
+
           )}
+
           <div className="text-center space-y-1 sm:space-y-2">
+
             <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{institution?.name}</h1>
+
             <div className="flex items-center gap-2 justify-center">
+
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
+
               <p className="text-sm sm:text-lg text-slate-600 font-medium">Student Result Portal</p>
+
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
+
             </div>
+
           </div>
+
         </div>
+
       </header>
 
+
+
       {/* Content */}
+
       <main className="flex-1 flex items-center justify-center py-0 sm:py-16 px-4 print:py-4 relative">
+
         <div className="w-full max-w-6xl space-y-2 sm:space-y-10 print:space-y-1">
+
           {!result ? (
+
             <div className="space-y-10">
+
               {/* Search Card */}
+
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+
                 <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-6 sm:pb-10">
+
                   <div className="text-center space-y-4 sm:space-y-6">
+
                     <div className="relative inline-flex items-center justify-center">
+
                       <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur-sm shadow-xl sm:shadow-2xl">
+
                         <Search className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+
                       </div>
+
                       <div className="absolute -inset-4 sm:-inset-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl animate-pulse"></div>
+
                     </div>
+
                     <div className="space-y-2 sm:space-y-3 px-4">
+
                       <CardTitle className="text-2xl sm:text-3xl font-bold text-white">Check Your Result</CardTitle>
+
                       <p className="text-white/90 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+
                         Enter your register number and secret code to view your academic performance
+
                       </p>
+
                     </div>
+
                   </div>
+
                 </CardHeader>
+
                 <CardContent className="p-6 sm:p-10">
+
                   <form onSubmit={handleSearch} className="space-y-6 sm:space-y-8">
+
                     <div className="grid grid-cols-1 gap-6 sm:gap-8">
+
                       <div className="space-y-2 sm:space-y-3">
+
                         <Label htmlFor="regNumber" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+
                           <Users className="h-4 w-4 text-indigo-600" />
+
                           Register Number
+
                         </Label>
+
                         <div className="relative group">
+
                           <Users className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+
                           <Input 
+
                             id="regNumber"
+
                             value={regNumber} 
+
                             onChange={(e) => setRegNumber(e.target.value)} 
+
                             required 
+
                             placeholder="Enter your register number"
+
                             className="pl-10 sm:pl-12 h-12 sm:h-14 border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 rounded-xl sm:rounded-2xl text-base sm:text-lg bg-white/80 backdrop-blur-sm transition-all duration-300"
+
                           />
+
                         </div>
+
                       </div>
+
                       <div className="space-y-2 sm:space-y-3">
+
                         <Label htmlFor="secretCode" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+
                           <Award className="h-4 w-4 text-purple-600" />
+
                           Secret Code
+
                         </Label>
+
                         <div className="relative group">
+
                           <Award className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
+
                           <Input 
+
                             id="secretCode"
+
                             type="password"
+
                             value={secretCode} 
+
                             onChange={(e) => setSecretCode(e.target.value)} 
+
                             required 
+
                             placeholder="Enter your secret code"
+
                             className="pl-10 sm:pl-12 h-12 sm:h-14 border-slate-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 rounded-xl sm:rounded-2xl text-base sm:text-lg bg-white/80 backdrop-blur-sm transition-all duration-300"
+
                           />
+
                         </div>
+
                       </div>
+
                     </div>
+
                     <Button 
+
                       type="submit" 
+
                       className="w-full h-12 sm:h-16 text-white font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02]"
+
                       disabled={searching}
+
                     >
+
                       {searching ? (
+
                         <>
+
                           <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 animate-spin" />
+
                           <span className="text-sm sm:text-base">Searching Results...</span>
+
                         </>
+
                       ) : (
+
                         <>
+
                           <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
+
                           <span className="text-sm sm:text-base">View My Result</span>
+
                         </>
+
                       )}
+
                     </Button>
+
                   </form>
+
                 </CardContent>
+
               </Card>
+
+
 
               {/* Instructions Card */}
+
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
+
                 <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 border-b border-slate-200/50">
+
                   <CardTitle className="text-lg sm:text-xl font-bold text-white flex items-center gap-3">
+
                     <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm">
+
                       <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+
                     </div>
+
                     <span className="text-sm sm:text-base">How to Check Your Result</span>
+
                   </CardTitle>
+
                 </CardHeader>
+
                 <CardContent className="p-6 sm:p-8">
+
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
+
                     <div className="text-center space-y-3 sm:space-y-4 group">
+
                       <div className="relative">
+
                         <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                           <span className="text-emerald-600 font-bold text-lg sm:text-2xl">1</span>
+
                         </div>
+
                         <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-20 blur-lg sm:blur-xl transition-all duration-300"></div>
+
                       </div>
+
                       <div className="space-y-1 sm:space-y-2 px-2">
+
                         <h3 className="font-bold text-slate-900 text-sm sm:text-lg">Enter Register Number</h3>
+
                         <p className="text-slate-600 leading-relaxed text-xs sm:text-base">Your unique student identification number</p>
+
                       </div>
+
                     </div>
+
                     <div className="text-center space-y-3 sm:space-y-4 group">
+
                       <div className="relative">
+
                         <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                           <span className="text-emerald-600 font-bold text-lg sm:text-2xl">2</span>
+
                         </div>
+
                         <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-20 blur-lg sm:blur-xl transition-all duration-300"></div>
+
                       </div>
+
                       <div className="space-y-1 sm:space-y-2 px-2">
+
                         <h3 className="font-bold text-slate-900 text-sm sm:text-lg">Enter Secret Code</h3>
+
                         <p className="text-slate-600 leading-relaxed text-xs sm:text-base">Your confidential access code provided by institution</p>
+
                       </div>
+
                     </div>
+
                     <div className="text-center space-y-3 sm:space-y-4 group">
+
                       <div className="relative">
+
                         <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                           <span className="text-emerald-600 font-bold text-lg sm:text-2xl">3</span>
+
                         </div>
+
                         <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-20 blur-lg sm:blur-xl transition-all duration-300"></div>
+
                       </div>
+
                       <div className="space-y-1 sm:space-y-2 px-2">
+
                         <h3 className="font-bold text-slate-900 text-sm sm:text-lg">View Results</h3>
+
                         <p className="text-slate-600 leading-relaxed text-xs sm:text-base">Instantly access your academic performance</p>
+
                       </div>
+
                     </div>
+
                   </div>
+
                 </CardContent>
+
               </Card>
+
             </div>
+
           ) : (
+
             <div className="space-y-2 print:space-y-1 print:hidden" id="result-card">
+
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+
                 <CardContent className="p-4 sm:p-10 space-y-4 sm:space-y-10 print:p-2 print:space-y-2">
+
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
+
                     <div className="space-y-6">
+
                       <div className="flex items-center gap-3 mb-4 sm:mb-6">
+
                         <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+
                           <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+
                         </div>
+
                         <h3 className="text-lg sm:text-2xl font-bold text-slate-900">Subject-wise Performance</h3>
+
                       </div>
+
                       <div className="rounded-xl sm:rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+
                         {/* Mobile Card Layout */}
+
                         <div className="sm:hidden divide-y divide-slate-200">
+
                           {result.subjects.map((s: any, i: number) => {
+
                             const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
+
                             const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : 'pass';
+
                             
+
                             return (
+
                               <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+
                                 <div className="flex items-center justify-between">
+
                                   <div className="flex items-center gap-3">
+
                                     <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+
                                       <BookOpen className="h-4 w-4 text-indigo-600" />
+
                                     </div>
+
                                     <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+
                                   </div>
+
                                 </div>
+
                                 <div className="flex items-center justify-between gap-4">
+
                                   <div className="flex items-center gap-2">
+
                                     <div className="relative">
+
                                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+
                                       <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+
                                         {s.marks}
+
                                       </span>
+
                                     </div>
+
                                   </div>
+
                                   <div className="flex items-center">
+
                                     {status === 'pass' ? (
+
                                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 border border-emerald-200">
+
                                         <CheckCircle className="h-3 w-3 text-emerald-600" />
+
                                         <span className="text-xs font-semibold text-emerald-700">Pass</span>
+
                                       </div>
+
                                     ) : (
+
                                       <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 border border-red-200">
+
                                         <AlertCircle className="h-3 w-3 text-red-600" />
+
                                         <span className="text-xs font-semibold text-red-700">Fail</span>
+
                                       </div>
+
                                     )}
+
                                   </div>
+
                                 </div>
+
                               </div>
+
                             );
+
                           })}
+
                         </div>
+
                         {/* Desktop Table Layout */}
+
                         <div className="hidden sm:block">
+
                           <Table>
+
                             <TableHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+
                               <TableRow>
+
                                 <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4">Subject</TableHead>
+
                                 <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4 text-right">Marks Obtained</TableHead>
+
                                 <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4 text-center">Status</TableHead>
+
                               </TableRow>
+
                             </TableHeader>
+
                             <TableBody className="divide-y divide-slate-200">
+
                               {result.subjects.map((s: any, i: number) => {
+
                                 const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
+
                                 const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : 'pass';
+
                                 
+
                                 return (
+
                                   <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
+
                                     <TableCell className="px-4 sm:px-6 py-3 sm:py-5">
+
                                       <div className="flex items-center gap-3">
+
                                         <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-colors">
+
                                           <BookOpen className="h-4 w-4 text-indigo-600" />
+
                                         </div>
+
                                         <span className="font-semibold text-slate-900 text-base sm:text-lg">{s.name}</span>
+
                                       </div>
+
                                     </TableCell>
+
                                     <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-right">
+
                                       <div className="flex items-center justify-end gap-2">
+
                                         <div className="relative">
+
                                           <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+
                                           <span className="relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+
                                             {s.marks}
+
                                           </span>
+
                                         </div>
+
                                       </div>
+
                                     </TableCell>
+
                                     <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-center">
+
                                       <div className="flex items-center justify-center">
+
                                         {status === 'pass' ? (
+
                                           <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200">
+
                                             <CheckCircle className="h-4 w-4 text-emerald-600" />
+
                                             <span className="text-sm font-semibold text-emerald-700">Pass</span>
+
                                           </div>
+
                                         ) : (
+
                                           <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200">
+
                                             <AlertCircle className="h-4 w-4 text-red-600" />
+
                                             <span className="text-sm font-semibold text-red-700">Fail</span>
+
                                           </div>
+
                                         )}
+
                                       </div>
+
                                     </TableCell>
+
                                   </TableRow>
+
                                 );
+
                               })}
+
                             </TableBody>
+
                           </Table>
+
                         </div>
+
                       </div>
+
                     </div>
+
                   )}
+
                   
+
                   <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 border-t border-slate-200 pt-8 sm:pt-10">
+
                     {result.total != null && (
+
                       <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
+
                           <div className="relative mb-3 sm:mb-4">
+
                             <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                               <BarChart3 className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+
                             </div>
+
                             <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+
                           </div>
+
                           <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Total Marks</p>
+
                           <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{result.total}</p>
+
                         </CardContent>
+
                       </Card>
+
                     )}
+
                     {result.grade && (
+
                       <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
+
                           <div className="relative mb-3 sm:mb-4">
+
                             <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                               <Award className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+
                             </div>
+
                             <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+
                           </div>
+
                           <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Grade</p>
+
                           <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{result.grade}</p>
+
                         </CardContent>
+
                       </Card>
+
                     )}
+
                     {result.rank && (
+
                       <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
+
                           <div className="relative mb-3 sm:mb-4">
+
                             <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+
                               <Crown className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+
                             </div>
+
                             <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+
                           </div>
+
                           <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Rank</p>
+
                           <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{result.rank}</p>
+
                         </CardContent>
+
                       </Card>
+
                     )}
+
                   </div>
+
                 </CardContent>
+
               </Card>
-
-              {/* Comprehensive Print Layout - Hidden from screen, visible in print */}
-              <div className="hidden print:block print:visible">
-                <div className="p-8 text-black bg-white print:p-8 print:bg-white">
-                  {/* Modern Print Header */}
-                  <div className="mb-8 print:mb-8">
-                    {/* Top decorative bar */}
-                    <div className="h-4 bg-blue-600 rounded-t-lg print:h-4 print:bg-blue-600 print:rounded-t-lg"></div>
-                    
-                    {/* Header content */}
-                    <div className="bg-blue-600 px-8 py-6 rounded-b-lg print:bg-blue-600 print:px-8 print:py-6 print:rounded-b-lg">
-                      <div className="text-center print:text-center">
-                        {institution?.logo_url && (
-                          <div className="mb-4 print:mb-4">
-                            <img src={institution.logo_url} alt={institution.name} className="h-16 mx-auto object-contain print:h-16" />
-                          </div>
-                        )}
-                        <h1 className="text-2xl font-bold text-white mb-2 print:text-2xl print:mb-2 print:text-white">{institution?.name?.toUpperCase()}</h1>
-                        <h2 className="text-lg text-white font-medium print:text-lg print:text-white">ACADEMIC RESULT CERTIFICATE</h2>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modern Student Information */}
-                  <div className="mb-8 print:mb-8">
-                    <div className="bg-gray-100 px-6 py-4 rounded-lg print:bg-gray-100 print:px-6 print:py-4 print:rounded-lg">
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 print:text-lg print:mb-4 print:text-gray-800">STUDENT INFORMATION</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-1 print:gap-4">
-                        <div className="space-y-3 print:space-y-3">
-                          <div className="flex justify-between print:flex print:justify-between">
-                            <span className="font-semibold text-gray-600 print:font-semibold print:text-gray-600">Student Name:</span>
-                            <span className="font-bold text-gray-900 print:font-bold print:text-gray-900">{result?.student_name}</span>
-                          </div>
-                          <div className="flex justify-between print:flex print:justify-between">
-                            <span className="font-semibold text-gray-600 print:font-semibold print:text-gray-600">Register Number:</span>
-                            <span className="font-bold text-gray-900 font-mono print:font-bold print:text-gray-900 print:font-mono">{result?.register_number}</span>
-                          </div>
-                          {result?.class && (
-                            <div className="flex justify-between print:flex print:justify-between">
-                              <span className="font-semibold text-gray-600 print:font-semibold print:text-gray-600">Class:</span>
-                              <span className="font-bold text-gray-900 print:font-bold print:text-gray-900">{result.class}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modern Subject Performance */}
-                  <div className="mb-8 print:mb-8">
-                    <div className="bg-gray-100 px-6 py-4 rounded-lg print:bg-gray-100 print:px-6 print:py-4 print:rounded-lg">
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 print:text-lg print:mb-4 print:text-gray-800">SUBJECT PERFORMANCE</h3>
-                      {Array.isArray(result?.subjects) && result.subjects.length > 0 ? (
-                        <div className="overflow-hidden rounded-lg border-2 border-gray-300 print:border-2 print:border-gray-300 print:rounded-lg">
-                          <table className="w-full print:w-full">
-                            <thead>
-                              <tr className="bg-blue-600 print:bg-blue-600">
-                                <th className="px-4 py-3 text-left text-white font-bold print:px-4 print:py-3 print:text-white print:font-bold">Subject</th>
-                                <th className="px-4 py-3 text-center text-white font-bold print:px-4 print:py-3 print:text-white print:font-bold">Marks</th>
-                                <th className="px-4 py-3 text-center text-white font-bold print:px-4 print:py-3 print:text-white print:font-bold">Grade</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {result.subjects.map((subject: any, index: number) => {
-                                const passMark = passMarks.find(pm => pm.subject === subject.name);
-                                const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
-                                const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : 'A+';
-                                
-                                return (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50 print:bg-gray-50' : 'bg-white print:bg-white'}>
-                                    <td className="px-4 py-3 border-t border-gray-200 font-medium print:px-4 print:py-3 print:border-t print:border-gray-200 print:font-medium">{subject.name}</td>
-                                    <td className="px-4 py-3 border-t border-gray-200 text-center print:px-4 print:py-3 print:border-t print:border-gray-200 print:text-center">
-                                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold print:inline-block print:px-3 print:py-1 print:rounded-full print:text-sm print:font-bold ${
-                                        subject.marks >= 80 ? 'bg-green-100 text-green-800 print:bg-green-100 print:text-green-800' :
-                                        subject.marks >= 60 ? 'bg-yellow-100 text-yellow-800 print:bg-yellow-100 print:text-yellow-800' :
-                                        'bg-red-100 text-red-800 print:bg-red-100 print:text-red-800'
-                                      }`}>
-                                        {subject.marks}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 border-t border-gray-200 text-center print:px-4 print:py-3 print:border-t print:border-gray-200 print:text-center">
-                                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold print:inline-block print:px-3 print:py-1 print:rounded-full print:text-sm print:font-bold ${
-                                        status === 'PASS' ? 'bg-green-100 text-green-800 print:bg-green-100 print:text-green-800' : 'bg-red-100 text-red-800 print:bg-red-100 print:text-red-800'
-                                      }`}>
-                                        {grade}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <p className="text-center text-gray-600 py-8 print:py-8">No subjects data available</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Modern Summary Cards */}
-                  <div className="mb-8 print:mb-8">
-                    <div className="bg-gray-100 px-6 py-4 rounded-lg print:bg-gray-100 print:px-6 print:py-4 print:rounded-lg">
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 print:text-lg print:mb-4 print:text-gray-800">ACADEMIC SUMMARY</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:grid-cols-1 print:gap-4">
-                        {result?.total !== null && (
-                          <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm print:bg-white print:p-6 print:rounded-lg print:border-2 print:border-gray-200 print:shadow-sm">
-                            <div className="text-center print:text-center">
-                              <div className="text-3xl font-bold text-blue-600 mb-2 print:text-3xl print:mb-2 print:text-blue-600">{result.total}</div>
-                              <div className="text-sm text-gray-600 print:text-sm">Total Marks</div>
-                            </div>
-                          </div>
-                        )}
-                        {result?.grade && (
-                          <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm print:bg-white print:p-6 print:rounded-lg print:border-2 print:border-gray-200 print:shadow-sm">
-                            <div className="text-center print:text-center">
-                              <div className="text-3xl font-bold text-green-600 mb-2 print:text-3xl print:mb-2 print:text-green-600">{result.grade}</div>
-                              <div className="text-sm text-gray-600 print:text-sm">Grade</div>
-                            </div>
-                          </div>
-                        )}
-                        {result?.rank && (
-                          <div className="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm print:bg-white print:p-6 print:rounded-lg print:border-2 print:border-gray-200 print:shadow-sm">
-                            <div className="text-center print:text-center">
-                              <div className="text-3xl font-bold text-amber-600 mb-2 print:text-3xl print:mb-2 print:text-amber-600">{result.rank}</div>
-                              <div className="text-sm text-gray-600 print:text-sm">Rank</div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modern Institution Details */}
-                  <div className="mb-8 print:mb-8">
-                    <div className="bg-gray-100 px-6 py-4 rounded-lg print:bg-gray-100 print:px-6 print:py-4 print:rounded-lg">
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 print:text-lg print:mb-4 print:text-gray-800">INSTITUTION DETAILS</h3>
-                      <div className="text-center space-y-2 print:space-y-2">
-                        <div>
-                          <span className="font-semibold text-gray-600 print:font-semibold print:text-gray-600">Institution:</span>
-                          <span className="font-bold text-gray-900 print:font-bold print:text-gray-900"> {institution?.name}</span>
-                        </div>
-                        {institution?.footer_message && (
-                          <div>
-                            <span className="font-semibold text-gray-600 print:font-semibold print:text-gray-600">Message:</span>
-                            <span className="text-gray-900 print:text-gray-900"> {institution.footer_message}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modern Footer */}
-                  <div className="mt-12 pt-8 border-t-4 border-gray-300 print:mt-12 print:pt-8 print:border-t-4 print:border-gray-300">
-                    <div className="text-center space-y-2 print:space-y-2">
-                      <div className="text-lg font-bold text-gray-800 print:text-lg">{institution?.name}</div>
-                      <div className="text-sm text-gray-600 print:text-sm">Official Result Certificate</div>
-                      <div className="text-xs text-gray-500 print:text-xs">Generated on {new Date().toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
       {/* Action Buttons */}
+
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-8">
+
             <Button 
-              onClick={() => window.print()} 
-              className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
+
+              onClick={handleDownload} 
+
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
+
             >
+
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
               <div className="relative flex items-center gap-3 sm:gap-4">
+
                 <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  <Printer className="h-5 w-5 sm:h-6 sm:w-6" />
+
+                  <FileDown className="h-5 w-5 sm:h-6 sm:w-6" />
+
                 </div>
+
                 <div className="text-left">
-                  <span className="text-sm sm:text-base font-bold block">Print Certificate</span>
-                  <span className="text-xs sm:text-sm opacity-90">Professional Format</span>
+
+                  <span className="text-sm sm:text-base font-bold block">Download Certificate</span>
+
+                  <span className="text-xs sm:text-sm opacity-90">Professional PDF Format</span>
+
                 </div>
+
               </div>
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
+
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
+
             </Button>
+
             <Button 
-              onClick={() => {
-                const shareUrl = window.location.href;
-                const shareText = `Check out ${result?.student_name}'s academic result certificate from ${institution?.name}`;
-                
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'Academic Result Certificate',
-                    text: shareText,
-                    url: shareUrl
-                  });
-                } else {
-                  // Fallback: Copy to clipboard
-                  navigator.clipboard.writeText(shareUrl);
-                  toast({ 
-                    title: "Link Copied", 
-                    description: "Result page link copied to clipboard" 
-                  });
-                }
-              }}
-              className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative flex items-center gap-3 sm:gap-4">
-                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
-                <div className="text-left">
-                  <span className="text-sm sm:text-base font-bold block">Share Result</span>
-                  <span className="text-xs sm:text-sm opacity-90">Modern & Professional</span>
-                </div>
-              </div>
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-400 to-pink-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
-            </Button>
-            <Button 
+
               variant="outline" 
+
               onClick={() => setResult(null)} 
+
               className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+
             >
+
               <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
+
               <span className="text-sm sm:text-base">Search Another</span>
+
             </Button>
+
           </div>
+
             </div>
+
           )}
+
         </div>
+
       </main>
 
+
+
       {/* Footer */}
+
       {institution?.footer_message && (
+
         <footer className="bg-white/80 backdrop-blur-lg border-t border-slate-200/50 py-4 sm:py-8 text-center print:border-0 relative">
+
           <div className="mx-auto max-w-6xl px-4">
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-2">
+
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
+
               <p className="text-slate-600 font-medium text-sm sm:text-lg">{institution.footer_message}</p>
+
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
+
             </div>
+
             <p className="text-xs sm:text-sm text-slate-500">© 2024 {institution?.name}. All rights reserved.</p>
+
           </div>
+
         </footer>
+
       )}
+
     </div>
+
   );
+
 };
 
+
+
 export default StudentResult;
+
