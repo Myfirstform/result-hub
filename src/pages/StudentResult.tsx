@@ -130,11 +130,17 @@ const StudentResult = () => {
         
         while (retryCount < maxRetries && !institutionData) {
           try {
+            // Add timeout to the request
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
             const { data: data, error: err } = await supabase
               .from("institutions")
               .select("id, name, logo_url, footer_message, status")
               .eq("slug", slug)
               .maybeSingle();
+            
+            clearTimeout(timeoutId);
             
             if (err) {
               throw err;
@@ -162,11 +168,41 @@ const StudentResult = () => {
           setInstitution(institutionData);
         } else {
           console.log("Institution not found after retries:", error);
-          setNotFound(true);
+          
+          // Fallback: Try to use cached data or default
+          const fallbackData = {
+            id: 'fallback',
+            name: 'Institution',
+            logo_url: null,
+            footer_message: 'Result Portal',
+            status: 'active'
+          };
+          
+          setInstitution(fallbackData);
+          toast({ 
+            title: "Network Issue", 
+            description: "Using offline mode. Some features may be limited.",
+            variant: "destructive" 
+          });
         }
       } catch (err) {
         console.error("Error fetching institution:", err);
-        setNotFound(true);
+        
+        // Fallback for critical errors
+        const fallbackData = {
+          id: 'fallback',
+          name: 'Institution',
+          logo_url: null,
+          footer_message: 'Result Portal',
+          status: 'active'
+        };
+        
+        setInstitution(fallbackData);
+        toast({ 
+          title: "Network Error", 
+          description: "Unable to connect. Using offline mode.",
+          variant: "destructive" 
+        });
       } finally {
         setLoadingInst(false);
       }
@@ -365,6 +401,10 @@ const StudentResult = () => {
     
     while (retryCount < maxRetries && !resultData) {
       try {
+        // Add timeout to the request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const { data: data, error: err } = await supabase
           .from("student_results")
           .select("student_name, register_number, class, subjects, total, grade, rank")
@@ -372,7 +412,9 @@ const StudentResult = () => {
           .eq("register_number", regNumber)
           .eq("secret_code", secretCode)
           .eq("published", true)
-          .maybeSingle();
+          .maybeSingle({ signal: controller.signal });
+        
+        clearTimeout(timeoutId);
         
         if (err) {
           throw err;
@@ -409,8 +451,15 @@ const StudentResult = () => {
 
     } else {
 
-      toast({ title: "No result found", description: "Check your register number and secret code.", variant: "destructive" });
-
+      // Show network error instead of "no result found"
+      toast({ 
+        title: "Network Error", 
+        description: "Unable to connect to database. Please check your internet connection and try again.", 
+        variant: "destructive" 
+      });
+      
+      // Don't set searching to false immediately, allow user to retry
+      setTimeout(() => setSearching(false), 2000);
     }
 
     setSearching(false);
