@@ -119,55 +119,57 @@ const StudentResult = () => {
     
 
     const fetchInstitution = async () => {
-
       try {
-
         console.log("Fetching institution for slug:", slug);
-
         
-
-        // Single optimized query with proper error handling
-
-        const { data: institutionData, error } = await supabase
-
-          .from("institutions")
-
-          .select("id, name, logo_url, footer_message, status")
-
-          .eq("slug", slug)
-
-          .maybeSingle();
-
+        // Retry logic for network timeouts
+        let retryCount = 0;
+        const maxRetries = 3;
+        let institutionData = null;
+        let error = null;
         
-
-        console.log("Institution query result:", { data: institutionData, error });
-
-        
-
-        if (institutionData) {
-
-          setInstitution(institutionData);
-
-        } else {
-
-          console.log("Institution not found:", error);
-
-          setNotFound(true);
-
+        while (retryCount < maxRetries && !institutionData) {
+          try {
+            const { data: data, error: err } = await supabase
+              .from("institutions")
+              .select("id, name, logo_url, footer_message, status")
+              .eq("slug", slug)
+              .maybeSingle();
+            
+            if (err) {
+              throw err;
+            }
+            
+            institutionData = data;
+            error = err;
+            break;
+          } catch (err) {
+            retryCount++;
+            console.log(`Retry ${retryCount}/${maxRetries} failed:`, err);
+            
+            if (retryCount < maxRetries) {
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
+            } else {
+              error = err;
+            }
+          }
         }
-
+        
+        console.log("Institution query result:", { data: institutionData, error });
+        
+        if (institutionData) {
+          setInstitution(institutionData);
+        } else {
+          console.log("Institution not found after retries:", error);
+          setNotFound(true);
+        }
       } catch (err) {
-
         console.error("Error fetching institution:", err);
-
         setNotFound(true);
-
       } finally {
-
         setLoadingInst(false);
-
       }
-
     };
 
     
@@ -356,23 +358,38 @@ const StudentResult = () => {
 
 
 
-    // Fetch student result
-
-    const { data: resultData } = await supabase
-
-      .from("student_results")
-
-      .select("student_name, register_number, class, subjects, total, grade, rank")
-
-      .eq("institution_id", institution.id)
-
-      .eq("register_number", regNumber)
-
-      .eq("secret_code", secretCode)
-
-      .eq("published", true)
-
-      .maybeSingle();
+    // Fetch student result with retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    let resultData = null;
+    
+    while (retryCount < maxRetries && !resultData) {
+      try {
+        const { data: data, error: err } = await supabase
+          .from("student_results")
+          .select("student_name, register_number, class, subjects, total, grade, rank")
+          .eq("institution_id", institution.id)
+          .eq("register_number", regNumber)
+          .eq("secret_code", secretCode)
+          .eq("published", true)
+          .maybeSingle();
+        
+        if (err) {
+          throw err;
+        }
+        
+        resultData = data;
+        break;
+      } catch (err) {
+        retryCount++;
+        console.log(`Result search retry ${retryCount}/${maxRetries} failed:`, err);
+        
+        if (retryCount < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
+        }
+      }
+    }
 
 
 
