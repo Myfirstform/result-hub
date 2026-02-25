@@ -276,7 +276,7 @@ const StudentResult = () => {
 
       pdf.setFillColor(...colors.primary);
 
-      pdf.noStroke();
+      pdf.rect(margin, yPosition, contentWidth, 8, 'F');
 
       pdf.rect(0, 0, pageWidth, 15);
 
