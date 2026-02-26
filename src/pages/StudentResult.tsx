@@ -315,12 +315,12 @@ const StudentResult = () => {
                   <tr style="background: ${bgColor};">
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
-                      <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4; border-bottom: 2px solid ${markColor}; padding-bottom: 2px;">
+                      <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
                         ${subject.marks}
                       </span>
                     </td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
-                      <span style="color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4; border-bottom: 2px solid ${status === 'PASS' ? '#10b981' : '#ef4444'}; padding-bottom: 2px;">
+                      <span style="color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
                         ${grade}
                       </span>
                     </td>
