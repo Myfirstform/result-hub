@@ -660,7 +660,9 @@ const StudentResult = () => {
 
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
-        <Card className="w-full max-w-2xl border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative">
+        <Card className="w-full max-w-2xl border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="relative">
 
           <CardContent className="p-8 sm:p-12 text-center space-y-6 sm:space-y-8">
 
@@ -707,6 +709,8 @@ const StudentResult = () => {
             </div>
 
           </CardContent>
+
+          </div>
 
         </Card>
 
@@ -798,9 +802,11 @@ const StudentResult = () => {
 
               {/* Search Card */}
 
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
-
-                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-4 sm:pb-6">
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative">
+                  <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 border-b border-slate-200/50 pb-4 sm:pb-6 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
                   <div className="text-center space-y-3 sm:space-y-4">
 
@@ -954,9 +960,11 @@ const StudentResult = () => {
 
               {/* Instructions Card */}
 
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
-
-                <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 border-b border-slate-200/50">
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative">
+                  <CardHeader className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 border-b border-slate-200/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
                   <CardTitle className="text-lg sm:text-xl font-bold text-white flex items-center gap-3">
 
@@ -1059,8 +1067,11 @@ const StudentResult = () => {
           ) : (
             <div className="space-y-6 print:space-y-4" id="result-card">
               {/* Student Details Card */}
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
-                <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-6 sm:p-8 print:bg-gradient-to-r print:from-indigo-100 print:via-purple-100 print:to-indigo-100">
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 backdrop-blur-sm print:shadow-none print:border-2 print:border-black relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.01]">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative">
+                  <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-6 sm:p-8 print:bg-gradient-to-r print:from-indigo-100 print:via-purple-100 print:to-indigo-100 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   <div className="flex flex-col sm:flex-row items-center gap-6">
                     {/* Student Avatar */}
                     <div className="relative">
@@ -1113,7 +1124,7 @@ const StudentResult = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Detailed Student Information */}
                 <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
@@ -1190,17 +1201,29 @@ const StudentResult = () => {
               </Card>
 
               {/* Subject-wise Performance Card */}
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
-                <CardContent className="p-6 sm:p-8 space-y-6 print:p-4 print:space-y-4">
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.01]">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative">
+                  <CardContent className="p-6 sm:p-8 space-y-6 print:p-4 print:space-y-4">
+
                   <div className="flex items-center justify-between">
+
                     <div className="flex items-center gap-3">
+
                       <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+
                         <BarChart3 className="h-6 w-6 text-blue-600" />
+
                       </div>
+
                       <div>
+
                         <h3 className="text-xl font-bold text-slate-900">Subject-wise Performance</h3>
+
                         <p className="text-sm text-slate-600">Detailed marks and pass/fail status</p>
+
                       </div>
+
                     </div>
                     <Button
                       onClick={handleDownload}
@@ -1514,6 +1537,8 @@ const StudentResult = () => {
 
                 </CardContent>
 
+                </div>
+
               </Card>
 
             </div>
@@ -1542,7 +1567,7 @@ const StudentResult = () => {
 
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-500"> 2024 {institution?.name}. All rights reserved.</p>
+            <p className="text-xs sm:text-sm text-slate-500">© 2024 {institution?.name}. All rights reserved.</p>
 
           </div>
 
