@@ -1057,320 +1057,434 @@ const StudentResult = () => {
             </div>
 
           ) : (
+            <div className="space-y-6 print:space-y-4" id="result-card">
+              {/* Student Details Card */}
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+                <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-6 sm:p-8 print:bg-gradient-to-r print:from-indigo-100 print:via-purple-100 print:to-indigo-100">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    {/* Student Avatar */}
+                    <div className="relative">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-xl">
+                        <span className="text-2xl sm:text-3xl font-bold text-white">
+                          {result?.student_name?.charAt(0)?.toUpperCase() || 'S'}
+                        </span>
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center border-4 border-white shadow-lg">
+                        <Award className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                      </div>
+                    </div>
+                    
+                    {/* Student Basic Info */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        {result?.student_name || 'Student Name'}
+                      </h2>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-white/90 text-sm sm:text-base">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span>Class: {result?.class || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Institution Logo */}
+                    <div className="relative">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border-2 border-white/20">
+                        {(institution?.logo_url || defaultLogoUrl) ? (
+                          <img 
+                            src={institution?.logo_url || defaultLogoUrl} 
+                            alt="Institution logo" 
+                            className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== defaultLogoUrl) {
+                                target.src = defaultLogoUrl;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="h-8 w-8 sm:h-10 sm:w-10 text-white/70" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Detailed Student Information */}
+                <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-blue-100">
+                        <FileDown className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm font-medium text-blue-700">Register Number</span>
+                    </div>
+                    <p className="text-lg font-bold text-blue-900">{result?.register_number || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-purple-100">
+                        <Target className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <span className="text-sm font-medium text-purple-700">Class</span>
+                    </div>
+                    <p className="text-lg font-bold text-purple-900">{result?.class || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-emerald-100">
+                        <Trophy className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <span className="text-sm font-medium text-emerald-700">Grade</span>
+                    </div>
+                    <p className="text-lg font-bold text-emerald-900">{result?.grade || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-amber-100">
+                        <Medal className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <span className="text-sm font-medium text-amber-700">Rank</span>
+                    </div>
+                    <p className="text-lg font-bold text-amber-900">{result?.rank || 'N/A'}</p>
+                  </div>
+                </div>
+                
+                {/* Academic Summary */}
+                {result?.total !== null && (
+                  <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+                    <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-indigo-200/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-lg font-bold text-indigo-900 mb-1">Total Marks</h4>
+                          <p className="text-sm text-indigo-600">Overall Performance</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            {result.total}
+                          </p>
+                          <p className="text-sm text-indigo-600">out of {result.subjects?.length * 100 || 0}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div className="w-full bg-white/50 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min((result.total / (result.subjects?.length * 100 || 1)) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-indigo-600 mt-1">
+                          {Math.round((result.total / (result.subjects?.length * 100 || 1)) * 100)}% Overall Score
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
 
-            <div className="space-y-2 print:space-y-1 print:hidden" id="result-card">
-
-              <Card className="border-0 shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
-
-                <CardContent className="p-4 sm:p-8 space-y-4 sm:space-y-8 print:p-3 print:space-y-3">
+              {/* Subject-wise Performance Card */}
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+                <CardContent className="p-6 sm:p-8 space-y-6 print:p-4 print:space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-900">Subject-wise Performance</h3>
+                        <p className="text-sm text-slate-600">Detailed marks and pass/fail status</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleDownload}
+                      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl shadow-lg transition-all duration-300"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Certificate
+                    </Button>
+                  </div>
 
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
-
-                    <div className="space-y-6">
-
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
-
-                        <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg sm:shadow-xl">
-
-                          <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-
-                        </div>
-
-                        <h3 className="text-base sm:text-xl font-bold text-slate-900">Subject-wise Performance</h3>
-
-                      </div>
-
-                      <div className="rounded-lg sm:rounded-xl border border-slate-200/50 overflow-hidden shadow-lg sm:shadow-xl">
-
-                        {/* Mobile Card Layout */}
-
-                        <div className="sm:hidden divide-y divide-slate-200">
-
-                          {result.subjects.map((s: any, i: number) => {
-                            // Find the pass mark for this subject and class
-                            const passMark = passMarks.find(pm => 
-                              pm.subject === s.name && pm.class === result.class
-                            );
-                            
-                            // If no pass mark is set, show as "Not Set" and fail by default
-                            if (!passMark) {
-                              return (
-                                <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
-                                        <BookOpen className="h-4 w-4 text-indigo-600" />
-                                      </div>
-                                      <span className="font-semibold text-slate-900 text-base">{s.name}</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
-                                      <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
-                                        <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
-                                          {s.marks}
-                                        </span>
-                                      </div>
-                                      <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
-                                    </div>
-                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
-                                      FAIL
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            }
-                            
-                            // Use the custom pass mark to determine pass/fail
-                            const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
-
-                            
-
+                    <div className="rounded-xl border border-slate-200/50 overflow-hidden shadow-lg">
+                      {/* Mobile Card Layout */}
+                      <div className="sm:hidden divide-y divide-slate-200">
+                        {result.subjects.map((s: any, i: number) => {
+                          // Find the pass mark for this subject and class
+                          const passMark = passMarks.find(pm => 
+                            pm.subject === s.name && pm.class === result.class
+                          );
+                          
+                          // If no pass mark is set, show as "Not Set" and fail by default
+                          if (!passMark) {
                             return (
-
                               <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
-
                                 <div className="flex items-center justify-between">
-
                                   <div className="flex items-center gap-3">
-
                                     <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
-
                                       <BookOpen className="h-4 w-4 text-indigo-600" />
-
                                     </div>
-
                                     <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                                        {s.marks}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                  </div>
+                                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                    FAIL
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // Use the custom pass mark to determine pass/fail
+                          const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
+
+                          return (
+                            <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                    <BookOpen className="h-4 w-4 text-indigo-600" />
+                                  </div>
+                                  <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-4">
+
+                                <div className="flex items-center gap-2">
+
+                                  <div className="relative">
+
+                                    <div className={`absolute inset-0 bg-gradient-to-r ${
+                                      status === 'pass' 
+                                        ? 'from-emerald-400 to-teal-500' 
+                                        : 'from-red-400 to-red-500'
+                                    } rounded-full blur opacity-75`}></div>
+
+                                    <span className={`relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r ${
+                                      status === 'pass' 
+                                        ? 'from-emerald-500 to-teal-600' 
+                                        : 'from-red-500 to-red-600'
+                                    } text-white shadow-lg`}>
+
+                                      {s.marks}
+
+                                    </span>
 
                                   </div>
+
+                                  <span className={`text-xs font-medium ${
+                                    status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                  }`}>Pass: {passMark.pass_mark}</span>
 
                                 </div>
 
-                                <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center">
 
-                                  <div className="flex items-center gap-2">
+                                  {status === 'pass' ? (
 
-                                    <div className="relative">
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 border border-emerald-200">
 
-                                      <div className={`absolute inset-0 bg-gradient-to-r ${
-                                        status === 'pass' 
-                                          ? 'from-emerald-400 to-teal-500' 
-                                          : 'from-red-400 to-red-500'
-                                      } rounded-full blur opacity-75`}></div>
+                                      <CheckCircle className="h-3 w-3 text-emerald-600" />
 
-                                      <span className={`relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r ${
-                                        status === 'pass' 
-                                          ? 'from-emerald-500 to-teal-600' 
-                                          : 'from-red-500 to-red-600'
-                                      } text-white shadow-lg`}>
-
-                                        {s.marks}
-
-                                      </span>
+                                      <span className="text-xs font-semibold text-emerald-700">Pass</span>
 
                                     </div>
 
-                                    <span className={`text-xs font-medium ${
-                                      status === 'pass' ? 'text-emerald-600' : 'text-red-600'
-                                    }`}>Pass: {passMark.pass_mark}</span>
+                                  ) : (
 
-                                  </div>
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 border border-red-200">
 
-                                  <div className="flex items-center">
+                                      <AlertCircle className="h-3 w-3 text-red-600" />
 
-                                    {status === 'pass' ? (
+                                      <span className="text-xs font-semibold text-red-700">Fail</span>
 
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 border border-emerald-200">
+                                    </div>
 
-                                        <CheckCircle className="h-3 w-3 text-emerald-600" />
-
-                                        <span className="text-xs font-semibold text-emerald-700">Pass</span>
-
-                                      </div>
-
-                                    ) : (
-
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 border border-red-200">
-
-                                        <AlertCircle className="h-3 w-3 text-red-600" />
-
-                                        <span className="text-xs font-semibold text-red-700">Fail</span>
-
-                                      </div>
-
-                                    )}
-
-                                  </div>
+                                  )}
 
                                 </div>
 
                               </div>
 
-                            );
+                            </div>
 
-                          })}
+                          );
 
-                        </div>
+                        })}
 
-                        {/* Desktop Table Layout */}
+                      </div>
 
-                        <div className="hidden sm:block">
+                      {/* Desktop Table Layout */}
 
-                          <Table>
+                      <div className="hidden sm:block">
 
-                            <TableHeader className="bg-gradient-to-r from-slate-100 to-slate-200 border-b-2 border-slate-300">
+                        <Table>
 
-                              <TableRow>
+                          <TableHeader>
 
-                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5">Subject</TableHead>
+                            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
 
-                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-right">Marks Obtained</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5">Subject</TableHead>
 
-                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Status</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Marks Obtained</TableHead>
 
-                              </TableRow>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Status</TableHead>
 
-                            </TableHeader>
+                            </TableRow>
 
-                            <TableBody className="divide-y divide-slate-200/60">
+                          </TableHeader>
 
-                              {result.subjects.map((s: any, i: number) => {
-                            // Find the pass mark for this subject and class
-                            const passMark = passMarks.find(pm => 
-                              pm.subject === s.name && pm.class === result.class
-                            );
-                            
-                            // If no pass mark is set, show as "Not Set" and fail by default
-                            if (!passMark) {
-                              return (
-                                <TableRow key={i} className="hover:bg-slate-50">
-                                  <TableCell className="px-4 py-4">
-                                    <div className="flex items-center gap-3">
-                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
-                                        <BookOpen className="h-4 w-4 text-indigo-600" />
-                                      </div>
-                                      <span className="font-semibold text-slate-900">{s.name}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-4">
-                                    <div className="flex items-center gap-2">
-                                      <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
-                                        <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
-                                          {s.marks}
-                                        </span>
-                                      </div>
-                                      <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-4">
-                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
-                                      FAIL
-                                    </span>
-                                  </TableCell>
-                                </TableRow>
+                          <TableBody className="divide-y divide-slate-200/60">
+
+                            {result.subjects.map((s: any, i: number) => {
+                              // Find the pass mark for this subject and class
+                              const passMark = passMarks.find(pm => 
+                                pm.subject === s.name && pm.class === result.class
                               );
-                            }
-                            
-                            // Use the custom pass mark to determine pass/fail
-                            const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
-
-                                
-
+                              
+                              // If no pass mark is set, show as "Not Set" and fail by default
+                              if (!passMark) {
                                 return (
-
-                                  <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
-
-                                    <TableCell className="px-4 sm:px-6 py-3 sm:py-5">
-
+                                  <TableRow key={i} className="hover:bg-slate-50">
+                                    <TableCell className="px-4 py-4">
                                       <div className="flex items-center gap-3">
-
-                                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200 transition-colors">
-
+                                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
                                           <BookOpen className="h-4 w-4 text-indigo-600" />
-
                                         </div>
-
-                                        <span className="font-semibold text-slate-900 text-base sm:text-lg">{s.name}</span>
-
+                                        <span className="font-semibold text-slate-900">{s.name}</span>
                                       </div>
-
                                     </TableCell>
-
-                                    <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-right">
-
-                                      <div className="flex items-center justify-end gap-2">
-
+                                    <TableCell className="px-4 py-4">
+                                      <div className="flex items-center gap-2">
                                         <div className="relative">
-
-                                          <div className={`absolute inset-0 bg-gradient-to-r ${
-                                            status === 'pass' 
-                                              ? 'from-emerald-400 to-teal-500' 
-                                              : 'from-red-400 to-red-500'
-                                          } rounded-full blur opacity-75`}></div>
-
-                                          <span className={`relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r ${
-                                            status === 'pass' 
-                                              ? 'from-emerald-500 to-teal-600' 
-                                              : 'from-red-500 to-red-600'
-                                          } text-white shadow-lg`}>
-
+                                          <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                          <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
                                             {s.marks}
-
                                           </span>
+                                        </div>
+                                        <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-4 py-4">
+                                      <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                        FAIL
+                                      </span>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
+                              
+                              // Use the custom pass mark to determine pass/fail
+                              const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
+
+                              return (
+
+                                <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
+
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5">
+
+                                    <div className="flex items-center gap-3">
+
+                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:scale-110 transition-transform">
+
+                                        <BookOpen className="h-4 w-4 text-indigo-600" />
+
+                                      </div>
+
+                                      <span className="font-semibold text-slate-900 text-base sm:text-lg">{s.name}</span>
+
+                                    </div>
+
+                                  </TableCell>
+
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-right">
+
+                                    <div className="flex items-center justify-end gap-2">
+
+                                      <div className="relative">
+
+                                        <div className={`absolute inset-0 bg-gradient-to-r ${
+                                          status === 'pass' 
+                                            ? 'from-emerald-400 to-teal-500' 
+                                            : 'from-red-400 to-red-500'
+                                        } rounded-full blur opacity-75`}></div>
+
+                                        <span className={`relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r ${
+                                          status === 'pass' 
+                                            ? 'from-emerald-500 to-teal-600' 
+                                            : 'from-red-500 to-red-600'
+                                        } text-white shadow-lg`}>
+
+                                          {s.marks}
+
+                                        </span>
+
+                                      </div>
+
+                                      <span className={`text-xs sm:text-sm font-medium ${
+                                        status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                      }`}>Pass: {passMark.pass_mark}</span>
+
+                                    </div>
+
+                                  </TableCell>
+
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-center">
+
+                                    <div className="flex items-center justify-center">
+
+                                      {status === 'pass' ? (
+
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200 group-hover:scale-105 transition-transform">
+
+                                          <CheckCircle className="h-4 w-4 text-emerald-600" />
+
+                                          <span className="text-sm font-semibold text-emerald-700">Pass</span>
 
                                         </div>
 
-                                        <span className={`text-xs sm:text-sm font-medium ${
-                                          status === 'pass' ? 'text-emerald-600' : 'text-red-600'
-                                        }`}>Pass: {passMark.pass_mark}</span>
+                                      ) : (
 
-                                      </div>
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200 group-hover:scale-105 transition-transform">
 
-                                    </TableCell>
+                                          <AlertCircle className="h-4 w-4 text-red-600" />
 
-                                    <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-center">
+                                          <span className="text-sm font-semibold text-red-700">Fail</span>
 
-                                      <div className="flex items-center justify-center">
+                                        </div>
 
-                                        {status === 'pass' ? (
+                                      )}
 
-                                          <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200">
+                                    </div>
 
-                                            <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                  </TableCell>
 
-                                            <span className="text-sm font-semibold text-emerald-700">Pass</span>
+                                </TableRow>
 
-                                          </div>
+                              );
 
-                                        ) : (
+                            })}
 
-                                          <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200">
+                          </TableBody>
 
-                                            <AlertCircle className="h-4 w-4 text-red-600" />
-
-                                            <span className="text-sm font-semibold text-red-700">Fail</span>
-
-                                          </div>
-
-                                        )}
-
-                                      </div>
-
-                                    </TableCell>
-
-                                  </TableRow>
-
-                                );
-
-                              })}
-
-                            </TableBody>
-
-                          </Table>
-
-                        </div>
+                        </Table>
 
                       </div>
 
@@ -1378,194 +1492,583 @@ const StudentResult = () => {
 
                   )}
 
-                  
+                  {/* Mobile Download Button */}
 
-                  <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 border-t border-slate-200 pt-8 sm:pt-10">
+                  <div className="sm:hidden">
 
-                    {result.total != null && (
+                    <Button
 
-                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
+                      onClick={handleDownload}
 
-                        <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl shadow-lg transition-all duration-300"
 
-                          <div className="relative mb-3 sm:mb-4">
+                    >
 
-                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
+                      <Download className="h-4 w-4" />
 
-                              <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+                      Download Certificate
 
-                            </div>
-
-                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
-
-                          </div>
-
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Total Marks</p>
-
-                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{result.total}</p>
-
-                        </CardContent>
-
-                      </Card>
-
-                    )}
-
-                    {result.grade && (
-
-                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
-
-                        <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
-
-                          <div className="relative mb-3 sm:mb-4">
-
-                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-
-                              <Award className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-
-                            </div>
-
-                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
-
-                          </div>
-
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Grade</p>
-
-                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{result.grade}</p>
-
-                        </CardContent>
-
-                      </Card>
-
-                    )}
-
-                    {result.rank && (
-
-                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
-
-                        <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
-
-                          <div className="relative mb-3 sm:mb-4">
-
-                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-
-                              <Crown className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-
-                            </div>
-
-                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
-
-                          </div>
-
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Rank</p>
-
-                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{result.rank}</p>
-
-                        </CardContent>
-
-                      </Card>
-
-                    )}
+                    </Button>
 
                   </div>
 
                 </CardContent>
-
               </Card>
 
-      {/* Action Buttons */}
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center print:hidden mt-8">
-
-            <Button 
-
-              onClick={handleDownload} 
-
-              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-500 h-12 sm:h-14 px-6 sm:px-8 rounded-xl sm:rounded-2xl w-full sm:w-auto"
-
-            >
-
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-              <div className="relative flex items-center gap-3 sm:gap-4">
-
-                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-
-                  <FileDown className="h-5 w-5 sm:h-6 sm:w-6" />
-
-                </div>
-
-                <div className="text-left">
-
-                  <span className="text-sm sm:text-base font-bold block">Download Certificate</span>
-
-                  <span className="text-xs sm:text-sm opacity-90">Professional JPG Format</span>
-
-                </div>
-
-              </div>
-
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-500"></div>
-
-            </Button>
-
-            <Button 
-
-              variant="outline" 
-
-              onClick={() => setResult(null)} 
-
-              className="gap-2 sm:gap-3 h-10 sm:h-12 px-4 sm:px-6 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg w-full sm:w-auto"
-
-            >
-
-              <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
-
-              <span className="text-sm sm:text-base">Search Another</span>
-
-            </Button>
-
-          </div>
-
             </div>
 
-          )}
+          </main>
 
+      </div>
+
+    );
+
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center px-4">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <Card className="w-full max-w-2xl border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative">
+          <CardContent className="p-8 sm:p-12 text-center space-y-6 sm:space-y-8">
+            <div className="relative">
+              <div className="mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-red-500 to-orange-600 w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center shadow-xl sm:shadow-2xl">
+                <SearchX className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
+              </div>
+              <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl"></div>
+            </div>
+            <div className="space-y-3 sm:space-y-4">
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Institution Not Found</h2>
+              <p className="text-slate-600 leading-relaxed text-sm sm:text-lg max-w-md mx-auto">
+                The institution <span className="font-mono bg-red-50 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl text-red-600 font-semibold border border-red-200">{slug}</span> does not exist or is inactive.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Button 
+                onClick={() => window.location.href = '/'}
+                className="px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              >
+                Go Back Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
+      {/* Header */}
+      <header className="relative border-b border-slate-200/50 bg-white/80 backdrop-blur-sm print:border-b-2 print:border-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {(institution?.logo_url || defaultLogoUrl) ? (
+                <div className="relative">
+                  <img 
+                    src={institution?.logo_url || defaultLogoUrl} 
+                    alt="Institution logo" 
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded-lg sm:rounded-xl shadow-lg"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (target.src !== defaultLogoUrl) {
+                        target.src = defaultLogoUrl;
+                      }
+                    }}
+                  />
+                  <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-10 blur-xl"></div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shadow-lg">
+                    <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
+                  </div>
+                  <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-10 blur-xl"></div>
+                </div>
+              )}
+              <div className="text-center space-y-1 sm:space-y-2">
+                <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{institution?.name}</h1>
+                <div className="flex items-center gap-2 justify-center">
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
+                  <p className="text-sm sm:text-lg text-slate-600 font-medium">Student Result Portal</p>
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </header>
 
+      {/* Content */}
+      <main className="flex-1 flex items-center justify-center py-8 sm:py-16 px-4">
+        <div className="w-full max-w-4xl space-y-6 sm:space-y-8">
+          {!result ? (
+            <div className="space-y-10">
+              {/* Search Card */}
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm">
+                <CardContent className="p-6 sm:p-8 space-y-6 sm:space-y-8">
+                  <div className="text-center space-y-4 sm:space-y-6">
+                    <div className="relative">
+                      <div className="mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center shadow-xl sm:shadow-2xl">
+                        <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
+                      </div>
+                      <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl"></div>
+                    </div>
+                    <div className="space-y-2 sm:space-y-3">
+                      <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        Student Result Portal
+                      </h2>
+                      <p className="text-slate-600 leading-relaxed text-sm sm:text-lg max-w-2xl mx-auto">
+                        Enter your register number and secret code to access your academic results
+                      </p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSearch} className="space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="regNumber" className="text-sm font-semibold text-slate-700">Register Number</Label>
+                        <Input
+                          id="regNumber"
+                          type="text"
+                          value={regNumber}
+                          onChange={(e) => setRegNumber(e.target.value)}
+                          placeholder="Enter your register number"
+                          className="h-12 sm:h-14 text-base sm:text-lg border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-xl"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="secretCode" className="text-sm font-semibold text-slate-700">Secret Code</Label>
+                        <Input
+                          id="secretCode"
+                          type="password"
+                          value={secretCode}
+                          onChange={(e) => setSecretCode(e.target.value)}
+                          placeholder="Enter your secret code"
+                          className="h-12 sm:h-14 text-base sm:text-lg border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-xl"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={searching}
+                      className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:via-purple-700 hover:to-indigo-800 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-base sm:text-lg"
+                    >
+                      {searching ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="mr-2 h-5 w-5" />
+                          View Result
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6 print:space-y-4" id="result-card">
+              {/* Student Details Card */}
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+                <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-6 sm:p-8 print:bg-gradient-to-r print:from-indigo-100 print:via-purple-100 print:to-indigo-100">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    {/* Student Avatar */}
+                    <div className="relative">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-xl">
+                        <span className="text-2xl sm:text-3xl font-bold text-white">
+                          {result?.student_name?.charAt(0)?.toUpperCase() || 'S'}
+                        </span>
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center border-4 border-white shadow-lg">
+                        <Award className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                      </div>
+                    </div>
+                    
+                    {/* Student Basic Info */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        {result?.student_name || 'Student Name'}
+                      </h2>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-white/90 text-sm sm:text-base">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span>Class: {result?.class || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Institution Logo */}
+                    <div className="relative">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border-2 border-white/20">
+                        {(institution?.logo_url || defaultLogoUrl) ? (
+                          <img 
+                            src={institution?.logo_url || defaultLogoUrl} 
+                            alt="Institution logo" 
+                            className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== defaultLogoUrl) {
+                                target.src = defaultLogoUrl;
+                              }
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="h-8 w-8 sm:h-10 sm:w-10 text-white/70" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Detailed Student Information */}
+                <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-blue-100">
+                        <FileDown className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm font-medium text-blue-700">Register Number</span>
+                    </div>
+                    <p className="text-lg font-bold text-blue-900">{result?.register_number || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-purple-100">
+                        <Target className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <span className="text-sm font-medium text-purple-700">Class</span>
+                    </div>
+                    <p className="text-lg font-bold text-purple-900">{result?.class || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-emerald-100">
+                        <Trophy className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <span className="text-sm font-medium text-emerald-700">Grade</span>
+                    </div>
+                    <p className="text-lg font-bold text-emerald-900">{result?.grade || 'N/A'}</p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-amber-100">
+                        <Medal className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <span className="text-sm font-medium text-amber-700">Rank</span>
+                    </div>
+                    <p className="text-lg font-bold text-amber-900">{result?.rank || 'N/A'}</p>
+                  </div>
+                </div>
+                
+                {/* Academic Summary */}
+                {result?.total !== null && (
+                  <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+                    <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-indigo-200/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-lg font-bold text-indigo-900 mb-1">Total Marks</h4>
+                          <p className="text-sm text-indigo-600">Overall Performance</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            {result.total}
+                          </p>
+                          <p className="text-sm text-indigo-600">out of {result.subjects?.length * 100 || 0}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div className="w-full bg-white/50 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min((result.total / (result.subjects?.length * 100 || 1)) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-indigo-600 mt-1">
+                          {Math.round((result.total / (result.subjects?.length * 100 || 1)) * 100)}% Overall Score
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Subject-wise Performance Card */}
+              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+                <CardContent className="p-6 sm:p-8 space-y-6 print:p-4 print:space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+                        <BarChart3 className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-900">Subject-wise Performance</h3>
+                        <p className="text-sm text-slate-600">Detailed marks and pass/fail status</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleDownload}
+                      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl shadow-lg transition-all duration-300"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Certificate
+                    </Button>
+                  </div>
+
+                  {Array.isArray(result.subjects) && result.subjects.length > 0 && (
+                    <div className="rounded-xl border border-slate-200/50 overflow-hidden shadow-lg">
+                      {/* Mobile Card Layout */}
+                      <div className="sm:hidden divide-y divide-slate-200">
+                        {result.subjects.map((s: any, i: number) => {
+                          // Find the pass mark for this subject and class
+                          const passMark = passMarks.find(pm => 
+                            pm.subject === s.name && pm.class === result.class
+                          );
+                          
+                          // If no pass mark is set, show as "Not Set" and fail by default
+                          if (!passMark) {
+                            return (
+                              <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                      <BookOpen className="h-4 w-4 text-indigo-600" />
+                                    </div>
+                                    <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                      <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                                        {s.marks}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                  </div>
+                                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                    FAIL
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // Use the custom pass mark to determine pass/fail
+                          const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
+
+                          return (
+                            <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                    <BookOpen className="h-4 w-4 text-indigo-600" />
+                                  </div>
+                                  <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="relative">
+                                    <div className={`absolute inset-0 bg-gradient-to-r ${
+                                      status === 'pass' 
+                                        ? 'from-emerald-400 to-teal-500' 
+                                        : 'from-red-400 to-red-500'
+                                    } rounded-full blur opacity-75`}></div>
+
+                                    <span className={`relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r ${
+                                      status === 'pass' 
+                                        ? 'from-emerald-500 to-teal-600' 
+                                        : 'from-red-500 to-red-600'
+                                    } text-white shadow-lg`}>
+                                      {s.marks}
+                                    </span>
+                                  </div>
+
+                                  <span className={`text-xs font-medium ${
+                                    status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                  }`}>Pass: {passMark.pass_mark}</span>
+                                </div>
+
+                                <div className="flex items-center">
+                                  {status === 'pass' ? (
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 border border-emerald-200">
+                                      <CheckCircle className="h-3 w-3 text-emerald-600" />
+                                      <span className="text-xs font-semibold text-emerald-700">Pass</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 border border-red-200">
+                                      <AlertCircle className="h-3 w-3 text-red-600" />
+                                      <span className="text-xs font-semibold text-red-700">Fail</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Desktop Table Layout */}
+                      <div className="hidden sm:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5">Subject</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Marks Obtained</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody className="divide-y divide-slate-200/60">
+                            {result.subjects.map((s: any, i: number) => {
+                              // Find the pass mark for this subject and class
+                              const passMark = passMarks.find(pm => 
+                                pm.subject === s.name && pm.class === result.class
+                              );
+                              
+                              // If no pass mark is set, show as "Not Set" and fail by default
+                              if (!passMark) {
+                                return (
+                                  <TableRow key={i} className="hover:bg-slate-50">
+                                    <TableCell className="px-4 py-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                          <BookOpen className="h-4 w-4 text-indigo-600" />
+                                        </div>
+                                        <span className="font-semibold text-slate-900">{s.name}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-4 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className="relative">
+                                          <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                          <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                                            {s.marks}
+                                          </span>
+                                        </div>
+                                        <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="px-4 py-4">
+                                      <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                        FAIL
+                                      </span>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
+                              
+                              // Use the custom pass mark to determine pass/fail
+                              const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
+
+                              return (
+                                <TableRow key={i} className="hover:bg-slate-50 transition-colors group">
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5">
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:scale-110 transition-transform">
+                                        <BookOpen className="h-4 w-4 text-indigo-600" />
+                                      </div>
+                                      <span className="font-semibold text-slate-900 text-base sm:text-lg">{s.name}</span>
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <div className="relative">
+                                        <div className={`absolute inset-0 bg-gradient-to-r ${
+                                          status === 'pass' 
+                                            ? 'from-emerald-400 to-teal-500' 
+                                            : 'from-red-400 to-red-500'
+                                        } rounded-full blur opacity-75`}></div>
+
+                                        <span className={`relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r ${
+                                          status === 'pass' 
+                                            ? 'from-emerald-500 to-teal-600' 
+                                            : 'from-red-500 to-red-600'
+                                        } text-white shadow-lg`}>
+                                          {s.marks}
+                                        </span>
+                                      </div>
+
+                                      <span className={`text-xs sm:text-sm font-medium ${
+                                        status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                      }`}>Pass: {passMark.pass_mark}</span>
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-center">
+                                    <div className="flex items-center justify-center">
+                                      {status === 'pass' ? (
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200 group-hover:scale-105 transition-transform">
+                                          <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                          <span className="text-sm font-semibold text-emerald-700">Pass</span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200 group-hover:scale-105 transition-transform">
+                                          <AlertCircle className="h-4 w-4 text-red-600" />
+                                          <span className="text-sm font-semibold text-red-700">Fail</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mobile Download Button */}
+                  <div className="sm:hidden">
+                    <Button
+                      onClick={handleDownload}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl shadow-lg transition-all duration-300"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Certificate
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </main>
 
-
-
       {/* Footer */}
-
       {institution?.footer_message && (
-
         <footer className="bg-white/80 backdrop-blur-lg border-t border-slate-200/50 py-4 sm:py-8 text-center print:border-0 relative">
-
           <div className="mx-auto max-w-6xl px-4">
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-2">
-
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
-
               <p className="text-slate-600 font-medium text-sm sm:text-lg">{institution.footer_message}</p>
-
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
-
             </div>
-
             <p className="text-xs sm:text-sm text-slate-500">© 2024 {institution?.name}. All rights reserved.</p>
-
           </div>
-
         </footer>
-
       )}
-
     </div>
-
   );
-
 };
 
 
