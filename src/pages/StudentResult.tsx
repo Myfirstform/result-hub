@@ -58,29 +58,9 @@ interface ResultData {
 
 
 
-interface PassMark {
-
-  class: string;
-
-  subject: string;
-
-  pass_mark: number;
-
-}
 
 
 
-interface SubjectWithStatus {
-
-  name: string;
-
-  marks: number;
-
-  status: 'pass' | 'fail';
-
-  passMark: number;
-
-}
 
 
 
@@ -102,8 +82,7 @@ const StudentResult = () => {
 
   const [loadingInst, setLoadingInst] = useState(true);
 
-  const [passMarks, setPassMarks] = useState<PassMark[]>([]);
-
+  
 
 
   // Default logo URL (using the website icon)
@@ -305,9 +284,8 @@ const StudentResult = () => {
             </thead>
             <tbody>
               ${result?.subjects?.map((subject, index) => {
-                const passMark = passMarks.find(pm => pm.subject === subject.name && pm.class === result.class);
-                const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : (subject.marks >= 50 ? 'PASS' : 'FAIL');
-                const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : (subject.marks >= 50 ? 'A+' : 'C');
+                const status = subject.marks >= 50 ? 'PASS' : 'FAIL';
+                const grade = subject.marks >= 50 ? 'A+' : 'C';
                 const bgColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
                 const markColor = subject.marks >= 80 ? '#10b981' : subject.marks >= 60 ? '#f59e0b' : '#ef4444';
                 const markBg = subject.marks >= 80 ? '#d1fae5' : subject.marks >= 60 ? '#fef3c7' : '#fee2e2';
@@ -489,16 +467,6 @@ const StudentResult = () => {
 
 
     if (resultData) {
-
-      // For now, we'll use a default pass mark logic
-
-      const defaultPassMarks = [
-
-        { class: resultData.class, subject: "All Subjects", pass_mark: 35 }
-
-      ];
-
-      setPassMarks(defaultPassMarks);
 
       setResult(resultData as ResultData);
 
@@ -1038,24 +1006,7 @@ const StudentResult = () => {
                         <div className="sm:hidden divide-y divide-slate-200">
 
                           {result.subjects.map((s: any, i: number) => {
-
-                            const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
-                            
-                            // CRITICAL DEBUG: Log everything
-                            console.log(`=== PASS MARK DEBUG ===`);
-                            console.log(`Student: ${result.student_name}, Class: ${result.class}`);
-                            console.log(`Subject: ${s.name}, Marks: ${s.marks}`);
-                            console.log(`Available pass marks:`, passMarks);
-                            console.log(`Found pass mark:`, passMark);
-                            
-                            const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : (s.marks >= 50 ? 'pass' : 'fail');
-                            
-                            if (passMark) {
-                              console.log(`CUSTOM PASS MARK: ${s.marks} >= ${passMark.pass_mark} = ${s.marks >= passMark.pass_mark} -> STATUS: ${status}`);
-                            } else {
-                              console.log(`DEFAULT PASS MARK: ${s.marks} >= 50 = ${s.marks >= 50} -> STATUS: ${status}`);
-                            }
-                            console.log(`========================`);
+                            const status = s.marks >= 50 ? 'pass' : 'fail';
 
                             
 
@@ -1156,24 +1107,7 @@ const StudentResult = () => {
                             <TableBody className="divide-y divide-slate-200/60">
 
                               {result.subjects.map((s: any, i: number) => {
-
-                                const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
-                                
-                                // CRITICAL DEBUG: Log everything for table view
-                                console.log(`=== TABLE VIEW DEBUG ===`);
-                                console.log(`Student: ${result.student_name}, Class: ${result.class}`);
-                                console.log(`Subject: ${s.name}, Marks: ${s.marks}`);
-                                console.log(`Available pass marks:`, passMarks);
-                                console.log(`Found pass mark:`, passMark);
-
-                                const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : (s.marks >= 50 ? 'pass' : 'fail');
-                                
-                                if (passMark) {
-                                  console.log(`TABLE CUSTOM PASS MARK: ${s.marks} >= ${passMark.pass_mark} = ${s.marks >= passMark.pass_mark} -> STATUS: ${status}`);
-                                } else {
-                                  console.log(`TABLE DEFAULT PASS MARK: ${s.marks} >= 50 = ${s.marks >= 50} -> STATUS: ${status}`);
-                                }
-                                console.log(`========================`);
+                                const status = s.marks >= 50 ? 'pass' : 'fail';
 
                                 
 
