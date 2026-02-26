@@ -626,9 +626,9 @@ const StudentResult = () => {
 
       {/* Header */}
 
-      <header className="text-card-foreground border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm relative mx-auto max-w-6xl mt-4 mb-6 print:hidden">
+      <header className="text-card-foreground border-0 shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm relative mx-auto max-w-4xl mt-4 mb-6 print:hidden">
 
-        <div className="px-4 py-6 sm:py-8 flex flex-col items-center gap-3 sm:gap-4">
+        <div className="px-4 py-4 sm:py-6 flex flex-col items-center gap-2 sm:gap-3">
 
           {(institution?.logo_url || defaultLogoUrl) && (
 
@@ -640,7 +640,7 @@ const StudentResult = () => {
 
                 alt={institution?.name || "Institution"} 
 
-                className="max-w-[100px] sm:max-w-[140px] h-auto object-contain drop-shadow-lg" 
+                className="max-w-[80px] sm:max-w-[100px] h-auto object-contain drop-shadow-lg" 
 
                 onError={(e) => {
 
@@ -688,7 +688,7 @@ const StudentResult = () => {
 
       <main className="flex-1 flex items-center justify-center py-0 sm:py-16 px-4 print:py-4 relative">
 
-        <div className="w-full max-w-6xl space-y-2 sm:space-y-10 print:space-y-1">
+        <div className="w-full max-w-4xl space-y-2 sm:space-y-8 print:space-y-1">
 
           {!result ? (
 
@@ -698,25 +698,25 @@ const StudentResult = () => {
 
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm">
 
-                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-6 sm:pb-10">
+                <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 border-b border-slate-200/50 pb-4 sm:pb-6">
 
-                  <div className="text-center space-y-4 sm:space-y-6">
+                  <div className="text-center space-y-3 sm:space-y-4">
 
                     <div className="relative inline-flex items-center justify-center">
 
-                      <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur-sm shadow-xl sm:shadow-2xl">
+                      <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm shadow-lg sm:shadow-xl">
 
-                        <Search className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                        <Search className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
 
                       </div>
 
-                      <div className="absolute -inset-4 sm:-inset-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl sm:rounded-3xl opacity-20 blur-xl sm:blur-2xl animate-pulse"></div>
+                      <div className="absolute -inset-3 sm:-inset-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl animate-pulse"></div>
 
                     </div>
 
-                    <div className="space-y-2 sm:space-y-3 px-4">
+                    <div className="space-y-1 sm:space-y-2 px-4">
 
-                      <CardTitle className="text-2xl sm:text-3xl font-bold text-white">Check Your Result</CardTitle>
+                      <CardTitle className="text-xl sm:text-2xl font-bold text-white">Check Your Result</CardTitle>
 
                       <p className="text-white/90 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
 
@@ -958,27 +958,27 @@ const StudentResult = () => {
 
             <div className="space-y-2 print:space-y-1 print:hidden" id="result-card">
 
-              <Card className="border-0 shadow-2xl sm:shadow-3xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+              <Card className="border-0 shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
 
-                <CardContent className="p-6 sm:p-12 space-y-6 sm:space-y-12 print:p-3 print:space-y-3">
+                <CardContent className="p-4 sm:p-8 space-y-4 sm:space-y-8 print:p-3 print:space-y-3">
 
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
 
                     <div className="space-y-6">
 
-                      <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
 
-                        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-xl sm:shadow-2xl">
+                        <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg sm:shadow-xl">
 
                           <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
 
                         </div>
 
-                        <h3 className="text-lg sm:text-2xl font-bold text-slate-900">Subject-wise Performance</h3>
+                        <h3 className="text-base sm:text-xl font-bold text-slate-900">Subject-wise Performance</h3>
 
                       </div>
 
-                      <div className="rounded-xl sm:rounded-2xl border border-slate-200/50 overflow-hidden shadow-xl sm:shadow-2xl">
+                      <div className="rounded-lg sm:rounded-xl border border-slate-200/50 overflow-hidden shadow-lg sm:shadow-xl">
 
                         {/* Mobile Card Layout */}
 
@@ -1186,29 +1186,29 @@ const StudentResult = () => {
 
                   
 
-                  <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 border-t border-slate-200 pt-12 sm:pt-16">
+                  <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 border-t border-slate-200 pt-8 sm:pt-10">
 
                     {result.total != null && (
 
-                      <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
 
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
 
                           <div className="relative mb-3 sm:mb-4">
 
-                            <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
 
-                              <BarChart3 className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+                              <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
 
                             </div>
 
-                            <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
 
                           </div>
 
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Total Marks</p>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Total Marks</p>
 
-                          <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{result.total}</p>
+                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{result.total}</p>
 
                         </CardContent>
 
@@ -1218,25 +1218,25 @@ const StudentResult = () => {
 
                     {result.grade && (
 
-                      <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
 
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
 
                           <div className="relative mb-3 sm:mb-4">
 
-                            <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
 
-                              <Award className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+                              <Award className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
 
                             </div>
 
-                            <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
 
                           </div>
 
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Grade</p>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Grade</p>
 
-                          <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{result.grade}</p>
+                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{result.grade}</p>
 
                         </CardContent>
 
@@ -1246,25 +1246,25 @@ const StudentResult = () => {
 
                     {result.rank && (
 
-                      <Card className="border-0 shadow-lg sm:shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 group hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300">
+                      <Card className="border-0 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 group hover:shadow-lg sm:hover:shadow-xl transition-all duration-300">
 
                         <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
 
                           <div className="relative mb-3 sm:mb-4">
 
-                            <div className="mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+                            <div className="mx-auto p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
 
-                              <Crown className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
+                              <Crown className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
 
                             </div>
 
-                            <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl opacity-20 blur-lg sm:blur-xl"></div>
+                            <div className="absolute -inset-1 sm:-inset-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg sm:rounded-xl opacity-20 blur-md sm:blur-lg"></div>
 
                           </div>
 
-                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1 sm:mb-2">Rank</p>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-1">Rank</p>
 
-                          <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{result.rank}</p>
+                          <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{result.rank}</p>
 
                         </CardContent>
 
@@ -1280,13 +1280,13 @@ const StudentResult = () => {
 
       {/* Action Buttons */}
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-12">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center print:hidden mt-8">
 
             <Button 
 
               onClick={handleDownload} 
 
-              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white border-0 shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 h-14 sm:h-16 px-8 sm:px-12 rounded-2xl sm:rounded-3xl w-full sm:w-auto"
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-500 h-12 sm:h-14 px-6 sm:px-8 rounded-xl sm:rounded-2xl w-full sm:w-auto"
 
             >
 
@@ -1320,7 +1320,7 @@ const StudentResult = () => {
 
               onClick={() => setResult(null)} 
 
-              className="gap-2 sm:gap-3 h-12 sm:h-14 px-6 sm:px-8 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+              className="gap-2 sm:gap-3 h-10 sm:h-12 px-4 sm:px-6 border-2 border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 shadow-md hover:shadow-lg w-full sm:w-auto"
 
             >
 
