@@ -315,12 +315,12 @@ const StudentResult = () => {
                   <tr style="background: ${bgColor};">
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
-                      <span style="background: ${markBg}; color: ${markColor}; padding: 8px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; display: inline-block; min-width: 60px; line-height: 1.4;">
+                      <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4; border-bottom: 2px solid ${markColor}; padding-bottom: 2px;">
                         ${subject.marks}
                       </span>
                     </td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
-                      <span style="background: ${status === 'PASS' ? '#d1fae5' : '#fee2e2'}; color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; padding: 8px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; display: inline-block; min-width: 60px; line-height: 1.4;">
+                      <span style="color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4; border-bottom: 2px solid ${status === 'PASS' ? '#10b981' : '#ef4444'}; padding-bottom: 2px;">
                         ${grade}
                       </span>
                     </td>
@@ -374,23 +374,12 @@ const StudentResult = () => {
           <!-- Decorative Elements -->
           <div style="position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 100px; height: 2px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 1px;"></div>
           
-          <div style="margin-bottom: 20px;">
-            <div style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 50px; border: 1px solid #e2e8f0;">
-              <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; line-height: 1.4;">${institution?.name || 'INSTITUTION'}</h4>
-            </div>
-          </div>
-          
           <div style="margin-bottom: 15px;">
             <p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 500; line-height: 1.4;">Official Result Certificate</p>
           </div>
           
           <div style="margin-bottom: 10px;">
             <p style="margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.4;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          </div>
-          
-          <!-- Verification Badge -->
-          <div style="display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 20px; margin-top: 15px;">
-            <p style="margin: 0; font-size: 12px; font-weight: 600; color: white; letter-spacing: 0.5px; line-height: 1.4;">✓ VERIFIED CERTIFICATE</p>
           </div>
         </div>
       `;
