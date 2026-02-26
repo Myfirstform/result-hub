@@ -60,15 +60,11 @@ interface ResultData {
 
 interface PassMark {
 
-  id: string;
-
   class: string;
 
   subject: string;
 
   pass_mark: number;
-
-  institution_id: string;
 
 }
 
@@ -309,7 +305,7 @@ const StudentResult = () => {
             </thead>
             <tbody>
               ${result?.subjects?.map((subject, index) => {
-                const passMark = passMarks.find(pm => pm.subject === subject.name && pm.class === result.class);
+                const passMark = passMarks.find(pm => pm.subject === subject.name);
                 const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
                 const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : 'A+';
                 const bgColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
@@ -427,59 +423,6 @@ const StudentResult = () => {
     }
   };
 
-  const fetchPassMarks = async (institutionId: string, studentClass?: string, subjects?: { name: string; marks: number }[]) => {
-    try {
-      const { data, error } = await supabase
-        .from("pass_marks")
-        .select("*")
-        .eq("institution_id", institutionId)
-        .order("class, subject");
-
-      if (error) {
-        console.error("Error fetching pass marks:", error);
-        // Return default pass marks if database query fails
-        if (studentClass && subjects) {
-          return subjects.map(subject => ({ 
-            id: `default-${subject.name}`, 
-            class: studentClass, 
-            subject: subject.name, 
-            pass_mark: 50, 
-            institution_id: institutionId 
-          }));
-        }
-        return [];
-      }
-      
-      const passMarksData = data || [];
-      
-      // If no pass marks exist for this institution, provide default for each subject
-      if (passMarksData.length === 0 && studentClass && subjects) {
-        return subjects.map(subject => ({ 
-          id: `default-${subject.name}`, 
-          class: studentClass, 
-          subject: subject.name, 
-          pass_mark: 50, 
-          institution_id: institutionId 
-        }));
-      }
-      
-      return passMarksData;
-    } catch (error) {
-      console.error("Error fetching pass marks:", error);
-      // Return default pass marks on error
-      if (studentClass && subjects) {
-        return subjects.map(subject => ({ 
-          id: `default-${subject.name}`, 
-          class: studentClass, 
-          subject: subject.name, 
-          pass_mark: 50, 
-          institution_id: institutionId 
-        }));
-      }
-      return [];
-    }
-  };
-
 
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -547,18 +490,15 @@ const StudentResult = () => {
 
     if (resultData) {
 
-      // Fetch pass marks from database with student class and subjects for fallback
-      const passMarksData = await fetchPassMarks(
-        institution.id, 
-        resultData.class || undefined, 
-        resultData.subjects || []
-      );
-      
-      // Debug: Log the fetched pass marks
-      console.log("Fetched pass marks:", passMarksData);
-      console.log("Student subjects:", resultData.subjects);
-      
-      setPassMarks(passMarksData);
+      // For now, we'll use a default pass mark logic
+
+      const defaultPassMarks = [
+
+        { class: resultData.class, subject: "All Subjects", pass_mark: 35 }
+
+      ];
+
+      setPassMarks(defaultPassMarks);
 
       setResult(resultData as ResultData);
 
@@ -1100,11 +1040,6 @@ const StudentResult = () => {
                           {result.subjects.map((s: any, i: number) => {
 
                             const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
-                            
-                            // Debug: Log the lookup process
-                            console.log(`Looking for pass mark - Subject: ${s.name}, Class: ${result.class}`);
-                            console.log(`Available pass marks:`, passMarks);
-                            console.log(`Found pass mark:`, passMark);
 
                             const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : 'pass';
 
@@ -1209,10 +1144,6 @@ const StudentResult = () => {
                               {result.subjects.map((s: any, i: number) => {
 
                                 const passMark = passMarks.find(pm => pm.subject === s.name && pm.class === result.class);
-                                
-                                // Debug: Log the lookup process for table view
-                                console.log(`Table view - Looking for pass mark - Subject: ${s.name}, Class: ${result.class}`);
-                                console.log(`Table view - Found pass mark:`, passMark);
 
                                 const status = passMark ? (s.marks >= passMark.pass_mark ? 'pass' : 'fail') : 'pass';
 
