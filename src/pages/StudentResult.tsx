@@ -1237,7 +1237,8 @@ const StudentResult = () => {
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
                     <div className="rounded-xl border border-slate-200/50 overflow-hidden shadow-lg">
                       {/* Mobile Card Layout */}
-                      <div className="sm:hidden divide-y divide-slate-200">
+                      <div className="sm:hidden divide-y divide-slate-200/60 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30 rounded-xl overflow-hidden shadow-inner">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-50"></div>
                         {result.subjects.map((s: any, i: number) => {
                           // Find the pass mark for this subject and class
                           const passMark = passMarks.find(pm => 
@@ -1247,7 +1248,9 @@ const StudentResult = () => {
                           // If no pass mark is set, show as "Not Set" and fail by default
                           if (!passMark) {
                             return (
-                              <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                              <div key={i} className="relative p-4 space-y-3 hover:bg-gradient-to-r hover:from-slate-50/80 hover:to-blue-50/50 transition-all duration-300 group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="relative z-10">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -1278,7 +1281,9 @@ const StudentResult = () => {
                           const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
 
                           return (
-                            <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                            <div key={i} className="relative p-4 space-y-3 hover:bg-gradient-to-r hover:from-slate-50/80 hover:to-blue-50/50 transition-all duration-300 group">
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              <div className="relative z-10">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -1357,24 +1362,20 @@ const StudentResult = () => {
                       {/* Desktop Table Layout */}
 
                       <div className="hidden sm:block">
-
-                        <Table>
+                        <div className="rounded-xl border border-slate-200/50 overflow-hidden shadow-lg bg-gradient-to-br from-white via-slate-50/30 to-blue-50/20">
+                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-30"></div>
+                          <div className="relative"></div>
+                            <Table>
 
                           <TableHeader>
-
-                            <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-
-                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5">Subject</TableHead>
-
-                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Marks Obtained</TableHead>
-
-                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Status</TableHead>
-
+                            <TableRow className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 border-b-2 border-indigo-200/50 shadow-sm">
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-5 sm:py-6 border-r border-indigo-100/50">Subject</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-5 sm:py-6 text-center border-r border-indigo-100/50">Marks Obtained</TableHead>
+                              <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-5 sm:py-6 text-center">Status</TableHead>
                             </TableRow>
-
                           </TableHeader>
 
-                          <TableBody className="divide-y divide-slate-200/60">
+                          <TableBody className="divide-y divide-slate-200/40 bg-white/60 backdrop-blur-sm">
 
                             {result.subjects.map((s: any, i: number) => {
                               // Find the pass mark for this subject and class
@@ -1385,13 +1386,13 @@ const StudentResult = () => {
                               // If no pass mark is set, show as "Not Set" and fail by default
                               if (!passMark) {
                                 return (
-                                  <TableRow key={i} className="hover:bg-slate-50">
-                                    <TableCell className="px-4 py-4">
+                                  <TableRow key={i} className="hover:bg-gradient-to-r hover:from-slate-50/80 hover:to-blue-50/50 transition-all duration-300 group border-b border-slate-100/50">
+                                    <TableCell className="px-6 py-5 border-r border-slate-100/30">
                                       <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 shadow-sm group-hover:shadow-md transition-shadow">
                                           <BookOpen className="h-4 w-4 text-indigo-600" />
                                         </div>
-                                        <span className="font-semibold text-slate-900">{s.name}</span>
+                                        <span className="font-semibold text-slate-900 text-base">{s.name}</span>
                                       </div>
                                     </TableCell>
                                     <TableCell className="px-4 py-4">
