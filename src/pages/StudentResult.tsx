@@ -54,9 +54,29 @@ interface ResultData {
 
   rank: string | null;
 
+  published: boolean;
+
+  created_by: string | null;
+
 }
 
+interface PassMark {
 
+  id: string;
+
+  class: string;
+
+  subject: string;
+
+  pass_mark: number;
+
+  institution_id: string;
+
+  created_by: string | null;
+
+  created_at: string;
+
+}
 
 
 
@@ -82,12 +102,35 @@ const StudentResult = () => {
 
   const [loadingInst, setLoadingInst] = useState(true);
 
+  const [passMarks, setPassMarks] = useState<PassMark[]>([]);
+
   
 
 
   // Default logo URL (using the website icon)
 
   const defaultLogoUrl = "/icon.png";
+
+  // Fetch pass marks for the institution
+  const fetchPassMarks = async (institutionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("pass_marks")
+        .select("*")
+        .eq("institution_id", institutionId)
+        .order("class, subject");
+
+      if (error) {
+        console.error("Error fetching pass marks:", error);
+        setPassMarks([]);
+      } else {
+        setPassMarks(data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching pass marks:", error);
+      setPassMarks([]);
+    }
+  };
 
 
 
@@ -284,11 +327,43 @@ const StudentResult = () => {
             </thead>
             <tbody>
               ${result?.subjects?.map((subject, index) => {
-                const status = subject.marks >= 50 ? 'PASS' : 'FAIL';
-                const grade = subject.marks >= 50 ? 'A+' : 'C';
+                // Find the pass mark for this subject and class
+                const passMark = passMarks.find(pm => 
+                  pm.subject === subject.name && pm.class === result.class
+                );
+                
+                // If no pass mark is set, show as "Not Set" and fail by default
+                if (!passMark) {
+                  const status = 'FAIL (Pass Mark Not Set)';
+                  const grade = 'F';
+                  const bgColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
+                  const markColor = '#ef4444';
+                  const markBg = '#fee2e2';
+                  return `
+                    <tr style="background: ${bgColor};">
+                      <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
+                      <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
+                        <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
+                          ${subject.marks}
+                        </span>
+                      </td>
+                      <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
+                        <span style="display: inline-block; padding: 6px 12px; font-size: 14px; font-weight: 600; line-height: 1.4; border-radius: 8px; background: #fee2e2; color: #dc2626;">
+                          ${status}
+                        </span>
+                      </td>
+                    </tr>
+                  `;
+                }
+                
+                // Use the custom pass mark to determine pass/fail
+                const status = subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL';
+                const grade = subject.marks >= passMark.pass_mark ? 'A+' : 'C';
                 const bgColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
                 const markColor = subject.marks >= 80 ? '#10b981' : subject.marks >= 60 ? '#f59e0b' : '#ef4444';
                 const markBg = subject.marks >= 80 ? '#d1fae5' : subject.marks >= 60 ? '#fef3c7' : '#fee2e2';
+                const statusBg = status === 'PASS' ? '#d1fae5' : '#fee2e2';
+                const statusColor = status === 'PASS' ? '#059669' : '#dc2626';
                 return `
                   <tr style="background: ${bgColor};">
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
@@ -296,15 +371,16 @@ const StudentResult = () => {
                       <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
                         ${subject.marks}
                       </span>
+                      <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">Pass: ${passMark.pass_mark}</div>
                     </td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
-                      <span style="color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
-                        ${grade}
+                      <span style="display: inline-block; padding: 6px 12px; font-size: 14px; font-weight: 600; line-height: 1.4; border-radius: 8px; background: ${statusBg}; color: ${statusColor};">
+                        ${status}
                       </span>
                     </td>
                   </tr>
                 `;
-              }).join('') || '<tr><td colspan="3" style="padding: 40px; text-align: center; color: #6b7280; font-size: 16px; line-height: 1.4;">No subjects data available</td></tr>'}
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -469,6 +545,11 @@ const StudentResult = () => {
     if (resultData) {
 
       setResult(resultData as ResultData);
+      
+      // Fetch pass marks for this institution
+      if (institution?.id) {
+        await fetchPassMarks(institution.id);
+      }
 
     } else {
 
@@ -1006,7 +1087,43 @@ const StudentResult = () => {
                         <div className="sm:hidden divide-y divide-slate-200">
 
                           {result.subjects.map((s: any, i: number) => {
-                            const status = s.marks >= 50 ? 'pass' : 'fail';
+                            // Find the pass mark for this subject and class
+                            const passMark = passMarks.find(pm => 
+                              pm.subject === s.name && pm.class === result.class
+                            );
+                            
+                            // If no pass mark is set, show as "Not Set" and fail by default
+                            if (!passMark) {
+                              return (
+                                <div key={i} className="p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                        <BookOpen className="h-4 w-4 text-indigo-600" />
+                                      </div>
+                                      <span className="font-semibold text-slate-900 text-base">{s.name}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2">
+                                      <div className="relative">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                        <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                                          {s.marks}
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                    </div>
+                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                      FAIL
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            // Use the custom pass mark to determine pass/fail
+                            const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
 
                             
 
@@ -1036,15 +1153,27 @@ const StudentResult = () => {
 
                                     <div className="relative">
 
-                                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+                                      <div className={`absolute inset-0 bg-gradient-to-r ${
+                                        status === 'pass' 
+                                          ? 'from-emerald-400 to-teal-500' 
+                                          : 'from-red-400 to-red-500'
+                                      } rounded-full blur opacity-75`}></div>
 
-                                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                                      <span className={`relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r ${
+                                        status === 'pass' 
+                                          ? 'from-emerald-500 to-teal-600' 
+                                          : 'from-red-500 to-red-600'
+                                      } text-white shadow-lg`}>
 
                                         {s.marks}
 
                                       </span>
 
                                     </div>
+
+                                    <span className={`text-xs font-medium ${
+                                      status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                    }`}>Pass: {passMark.pass_mark}</span>
 
                                   </div>
 
@@ -1107,7 +1236,45 @@ const StudentResult = () => {
                             <TableBody className="divide-y divide-slate-200/60">
 
                               {result.subjects.map((s: any, i: number) => {
-                                const status = s.marks >= 50 ? 'pass' : 'fail';
+                            // Find the pass mark for this subject and class
+                            const passMark = passMarks.find(pm => 
+                              pm.subject === s.name && pm.class === result.class
+                            );
+                            
+                            // If no pass mark is set, show as "Not Set" and fail by default
+                            if (!passMark) {
+                              return (
+                                <TableRow key={i} className="hover:bg-slate-50">
+                                  <TableCell className="px-4 py-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100">
+                                        <BookOpen className="h-4 w-4 text-indigo-600" />
+                                      </div>
+                                      <span className="font-semibold text-slate-900">{s.name}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-4">
+                                    <div className="flex items-center gap-2">
+                                      <div className="relative">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
+                                        <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                                          {s.marks}
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-4">
+                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                                      FAIL
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            }
+                            
+                            // Use the custom pass mark to determine pass/fail
+                            const status = s.marks >= passMark.pass_mark ? 'pass' : 'fail';
 
                                 
 
@@ -1137,15 +1304,27 @@ const StudentResult = () => {
 
                                         <div className="relative">
 
-                                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur opacity-75"></div>
+                                          <div className={`absolute inset-0 bg-gradient-to-r ${
+                                            status === 'pass' 
+                                              ? 'from-emerald-400 to-teal-500' 
+                                              : 'from-red-400 to-red-500'
+                                          } rounded-full blur opacity-75`}></div>
 
-                                          <span className="relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                                          <span className={`relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r ${
+                                            status === 'pass' 
+                                              ? 'from-emerald-500 to-teal-600' 
+                                              : 'from-red-500 to-red-600'
+                                          } text-white shadow-lg`}>
 
                                             {s.marks}
 
                                           </span>
 
                                         </div>
+
+                                        <span className={`text-xs sm:text-sm font-medium ${
+                                          status === 'pass' ? 'text-emerald-600' : 'text-red-600'
+                                        }`}>Pass: {passMark.pass_mark}</span>
 
                                       </div>
 

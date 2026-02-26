@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
-import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen, AlertTriangle, CheckSquare, Square } from "lucide-react";
+import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen, AlertTriangle, CheckSquare, Square, Loader2 } from "lucide-react";
 
 import * as XLSX from "xlsx";
 
@@ -44,6 +44,21 @@ interface StudentResult {
 }
 
 
+
+interface PassMark {
+  id: string;
+  class: string;
+  subject: string;
+  pass_mark: number;
+  institution_id: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+interface ClassSubject {
+  class: string;
+  subjects: string[];
+}
 
 const InstitutionAdmin = () => {
   const { institutionId, user } = useAuth();
@@ -68,6 +83,15 @@ const InstitutionAdmin = () => {
   const [logoUrl, setLogoUrl] = useState("");
   const [loadingInstitution, setLoadingInstitution] = useState(false);
 
+  // Pass marks state
+  const [passMarks, setPassMarks] = useState<PassMark[]>([]);
+  const [passMarksLoading, setPassMarksLoading] = useState(false);
+  const [classSubjects, setClassSubjects] = useState<ClassSubject[]>([]);
+  const [passMarkDialogOpen, setPassMarkDialogOpen] = useState(false);
+  const [editingPassMark, setEditingPassMark] = useState<PassMark | null>(null);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [newPassMark, setNewPassMark] = useState("");
   
   // Bulk actions state
   const [selectedResults, setSelectedResults] = useState<string[]>([]);
@@ -163,6 +187,7 @@ const InstitutionAdmin = () => {
 
   const fetchResults = async () => {
     if (!institutionId) return;
+    setLoading(true);
 
     const { data } = await supabase
       .from("student_results")
@@ -175,11 +200,67 @@ const InstitutionAdmin = () => {
     setLoading(false);
   };
 
-  
-  
+  // Extract subjects and classes from existing results data
+  const extractClassSubjects = () => {
+    const classSubjectMap = new Map<string, Set<string>>();
+
+    results.forEach(result => {
+      if (result.class && result.subjects && Array.isArray(result.subjects)) {
+        const className = result.class;
+        
+        if (!classSubjectMap.has(className)) {
+          classSubjectMap.set(className, new Set());
+        }
+        
+        const subjectSet = classSubjectMap.get(className)!;
+        result.subjects.forEach((subject: any) => {
+          if (subject.name && typeof subject.name === 'string') {
+            subjectSet.add(subject.name);
+          }
+        });
+      }
+    });
+
+    const classSubjectsArray: ClassSubject[] = Array.from(classSubjectMap.entries())
+      .map(([className, subjects]) => ({
+        class: className,
+        subjects: Array.from(subjects).sort()
+      }))
+      .sort((a, b) => a.class.localeCompare(b.class));
+
+    setClassSubjects(classSubjectsArray);
+  };
+
+  // Fetch pass marks from database
+  const fetchPassMarks = async () => {
+    if (!institutionId) return;
+    setPassMarksLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("pass_marks")
+        .select("*")
+        .eq("institution_id", institutionId)
+        .order("class, subject");
+
+      if (error) {
+        console.error("Error fetching pass marks:", error);
+        setPassMarks([]);
+      } else {
+        setPassMarks(data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching pass marks:", error);
+      setPassMarks([]);
+    } finally {
+      setPassMarksLoading(false);
+    }
+  };
 
 
   useEffect(() => { fetchResults(); }, [institutionId, user?.id]);
+  useEffect(() => { extractClassSubjects(); }, [results]);
+  useEffect(() => { fetchPassMarks(); }, [institutionId, user?.id]);
   useEffect(() => { 
     console.log("InstitutionAdmin useEffect - institutionId:", institutionId);
     console.log("InstitutionAdmin useEffect - user:", user?.id);
@@ -443,6 +524,96 @@ const InstitutionAdmin = () => {
     } finally {
       setBulkActionLoading(false);
     }
+  };
+
+  // Pass marks management functions
+  const handleSavePassMark = async () => {
+    if (!selectedClass || !selectedSubject || !newPassMark) {
+      toast({ title: "Missing fields", description: "Please fill all fields", variant: "destructive" });
+      return;
+    }
+
+    const passMarkValue = parseInt(newPassMark);
+    if (isNaN(passMarkValue) || passMarkValue < 0 || passMarkValue > 100) {
+      toast({ title: "Invalid pass mark", description: "Pass mark must be between 0 and 100", variant: "destructive" });
+      return;
+    }
+
+    try {
+      if (editingPassMark) {
+        // Update existing pass mark
+        const { error } = await supabase
+          .from("pass_marks")
+          .update({ pass_mark: passMarkValue })
+          .eq("id", editingPassMark.id);
+
+        if (error) throw error;
+        
+        toast({ title: "Pass mark updated successfully" });
+        setPassMarkDialogOpen(false);
+        setEditingPassMark(null);
+        resetPassMarkForm();
+        fetchPassMarks();
+      } else {
+        // Create new pass mark
+        const { error } = await supabase
+          .from("pass_marks")
+          .insert({
+            institution_id: institutionId,
+            class: selectedClass,
+            subject: selectedSubject,
+            pass_mark: passMarkValue,
+            created_by: user?.id
+          });
+
+        if (error) throw error;
+        
+        toast({ title: "Pass mark created successfully" });
+        setPassMarkDialogOpen(false);
+        resetPassMarkForm();
+        fetchPassMarks();
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Operation failed", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleEditPassMark = (passMark: PassMark) => {
+    setEditingPassMark(passMark);
+    setSelectedClass(passMark.class);
+    setSelectedSubject(passMark.subject);
+    setNewPassMark(passMark.pass_mark.toString());
+    setPassMarkDialogOpen(true);
+  };
+
+  const handleDeletePassMark = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this pass mark?")) return;
+
+    try {
+      const { error } = await supabase.from("pass_marks").delete().eq("id", id);
+      
+      if (error) throw error;
+      
+      toast({ title: "Pass mark deleted successfully" });
+      fetchPassMarks();
+    } catch (error: any) {
+      toast({ 
+        title: "Delete failed", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const resetPassMarkForm = () => {
+    setSelectedClass("");
+    setSelectedSubject("");
+    setNewPassMark("");
+    setEditingPassMark(null);
   };
 
   const handleBulkPublish = async (publish: boolean) => {
@@ -777,6 +948,203 @@ const InstitutionAdmin = () => {
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Pass Marks Management Section */}
+          <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(62, 45, 116, 0.1)' }}>
+                    <Settings className="h-5 w-5" style={{ color: 'rgba(62, 45, 116)' }} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-slate-900">Pass Marks Management</CardTitle>
+                    <p className="text-sm text-slate-600">Set custom pass marks for subjects by class</p>
+                  </div>
+                </div>
+                <Dialog open={passMarkDialogOpen} onOpenChange={setPassMarkDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="gap-2 px-4 py-2 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                      style={{ backgroundColor: 'rgba(62, 45, 116)' }}
+                      onClick={() => resetPassMarkForm()}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Pass Mark
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md border-0 shadow-2xl">
+                    <DialogHeader className="pb-4">
+                      <DialogTitle className="text-xl font-semibold text-slate-900">
+                        {editingPassMark ? 'Edit Pass Mark' : 'Add Pass Mark'}
+                      </DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Set the pass mark for a specific subject and class
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="class" className="text-sm font-medium text-slate-700">Class</Label>
+                        <select
+                          id="class"
+                          value={selectedClass}
+                          onChange={(e) => setSelectedClass(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Select class</option>
+                          {classSubjects.map(cs => (
+                            <option key={cs.class} value={cs.class}>{cs.class}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subject" className="text-sm font-medium text-slate-700">Subject</Label>
+                        <select
+                          id="subject"
+                          value={selectedSubject}
+                          onChange={(e) => setSelectedSubject(e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          disabled={!selectedClass}
+                        >
+                          <option value="">Select subject</option>
+                          {selectedClass && classSubjects.find(cs => cs.class === selectedClass)?.subjects.map(subject => (
+                            <option key={subject} value={subject}>{subject}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="passMark" className="text-sm font-medium text-slate-700">Pass Mark</Label>
+                        <Input
+                          id="passMark"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={newPassMark}
+                          onChange={(e) => setNewPassMark(e.target.value)}
+                          placeholder="Enter pass mark (0-100)"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          onClick={handleSavePassMark}
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                        >
+                          {editingPassMark ? 'Update' : 'Add'} Pass Mark
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setPassMarkDialogOpen(false)}
+                          className="flex-1 border-slate-300 hover:bg-slate-50 font-medium py-2 px-4 rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {passMarksLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                </div>
+              ) : classSubjects.length === 0 ? (
+                <div className="text-center py-12">
+                  <AlertTriangle className="h-12 w-12 text-slate-300 mb-3 mx-auto" />
+                  <p className="text-slate-600 font-medium">No subjects found</p>
+                  <p className="text-slate-500 text-sm mt-1">Upload student results first to see subjects and classes</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-200">
+                  {classSubjects.map((classSubject) => (
+                    <div key={classSubject.class} className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 rounded-lg bg-indigo-50">
+                          <BookOpen className="h-4 w-4 text-indigo-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900">Class {classSubject.class}</h3>
+                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200">
+                          {classSubject.subjects.length} subjects
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {classSubject.subjects.map((subject) => {
+                          const existingPassMark = passMarks.find(
+                            pm => pm.class === classSubject.class && pm.subject === subject
+                          );
+                          return (
+                            <div key={subject} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-slate-900">{subject}</span>
+                                {existingPassMark ? (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={`${
+                                      existingPassMark.pass_mark >= 50 
+                                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                        : 'bg-amber-100 text-amber-700 border-amber-200'
+                                    }`}
+                                  >
+                                    {existingPassMark.pass_mark}%
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="border-red-200 text-red-600">
+                                    Not Set
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {existingPassMark ? (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleEditPassMark(existingPassMark)} 
+                                      className="h-8 w-8 p-0 hover:bg-indigo-50"
+                                      title="Edit Pass Mark"
+                                    >
+                                      <Edit2 className="h-4 w-4 text-indigo-600" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleDeletePassMark(existingPassMark.id)} 
+                                      className="h-8 w-8 p-0 hover:bg-red-50"
+                                      title="Delete Pass Mark"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-600" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => {
+                                      setSelectedClass(classSubject.class);
+                                      setSelectedSubject(subject);
+                                      setNewPassMark("");
+                                      setEditingPassMark(null);
+                                      setPassMarkDialogOpen(true);
+                                    }} 
+                                    className="h-8 w-8 p-0 hover:bg-indigo-50"
+                                    title="Set Pass Mark"
+                                  >
+                                    <Plus className="h-4 w-4 text-indigo-600" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
