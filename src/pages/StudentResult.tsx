@@ -1395,8 +1395,8 @@ const StudentResult = () => {
                                         <span className="font-semibold text-slate-900 text-base">{s.name}</span>
                                       </div>
                                     </TableCell>
-                                    <TableCell className="px-4 py-4">
-                                      <div className="flex items-center gap-2">
+                                    <TableCell className="px-6 py-5 text-center border-r border-slate-100/30">
+                                      <div className="flex flex-col items-center gap-2">
                                         <div className="relative">
                                           <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur opacity-75"></div>
                                           <span className="relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
@@ -1406,7 +1406,7 @@ const StudentResult = () => {
                                         <span className="text-xs text-red-600 font-medium">Pass Mark Not Set</span>
                                       </div>
                                     </TableCell>
-                                    <TableCell className="px-4 py-4">
+                                    <TableCell className="px-6 py-5 text-center">
                                       <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
                                         FAIL
                                       </span>
@@ -1438,66 +1438,42 @@ const StudentResult = () => {
 
                                   </TableCell>
 
-                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-right">
-
-                                    <div className="flex items-center justify-end gap-2">
-
+                                  <TableCell className="px-6 py-5 text-center border-r border-slate-100/30">
+                                    <div className="flex flex-col items-center gap-2">
                                       <div className="relative">
-
                                         <div className={`absolute inset-0 bg-gradient-to-r ${
                                           status === 'pass' 
                                             ? 'from-emerald-400 to-teal-500' 
                                             : 'from-red-400 to-red-500'
                                         } rounded-full blur opacity-75`}></div>
-
-                                        <span className={`relative inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-base sm:text-lg font-bold bg-gradient-to-r ${
+                                        <span className={`relative inline-flex items-center px-3 py-1 rounded-full text-base font-bold bg-gradient-to-r ${
                                           status === 'pass' 
                                             ? 'from-emerald-500 to-teal-600' 
                                             : 'from-red-500 to-red-600'
                                         } text-white shadow-lg`}>
-
                                           {s.marks}
-
                                         </span>
-
                                       </div>
-
-                                      <span className={`text-xs sm:text-sm font-medium ${
+                                      <span className={`text-xs font-medium ${
                                         status === 'pass' ? 'text-emerald-600' : 'text-red-600'
                                       }`}>Pass: {passMark.pass_mark}</span>
-
                                     </div>
-
                                   </TableCell>
 
-                                  <TableCell className="px-4 sm:px-6 py-3 sm:py-5 text-center">
-
+                                  <TableCell className="px-6 py-5 text-center">
                                     <div className="flex items-center justify-center">
-
                                       {status === 'pass' ? (
-
                                         <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200 group-hover:scale-105 transition-transform">
-
                                           <CheckCircle className="h-4 w-4 text-emerald-600" />
-
                                           <span className="text-sm font-semibold text-emerald-700">Pass</span>
-
                                         </div>
-
                                       ) : (
-
                                         <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-red-100 border border-red-200 group-hover:scale-105 transition-transform">
-
                                           <AlertCircle className="h-4 w-4 text-red-600" />
-
                                           <span className="text-sm font-semibold text-red-700">Fail</span>
-
                                         </div>
-
                                       )}
-
                                     </div>
-
                                   </TableCell>
 
                                 </TableRow>
@@ -1509,6 +1485,10 @@ const StudentResult = () => {
                           </TableBody>
 
                         </Table>
+
+                        </div>
+
+                        </div>
 
                       </div>
 
