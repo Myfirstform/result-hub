@@ -226,43 +226,90 @@ const StudentResult = () => {
         position: fixed;
         top: -9999px;
         left: -9999px;
-        width: 800px;
-        background: white;
-        padding: 40px;
-        font-family: Arial, sans-serif;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: 1200px;
+        min-height: 1700px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: 60px 80px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
       `;
       
       // Build certificate HTML
       certificateElement.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="height: 8px; background: #2962ff; border-radius: 4px 4px 0 0; margin-bottom: 20px;"></div>
-          <div style="background: #2962ff; padding: 20px; border-radius: 0 0 8px 8px; color: white;">
-            ${institution?.logo_url ? `<img src="${institution.logo_url}" alt="${institution.name}" style="height: 60px; margin-bottom: 10px; object-fit: contain;">` : ''}
-            <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: bold;">${institution?.name?.toUpperCase()}</h1>
-            <h2 style="margin: 0; font-size: 18px; font-weight: 500;">ACADEMIC RESULT CERTIFICATE</h2>
+        <!-- Certificate Header -->
+        <div style="text-align: center; margin-bottom: 50px; position: relative;">
+          <!-- Decorative Border -->
+          <div style="position: absolute; top: -20px; left: -20px; right: -20px; height: 120px; background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%); border-radius: 20px 20px 0 0; opacity: 0.1;"></div>
+          
+          <!-- Logo Section -->
+          <div style="position: relative; z-index: 1; margin-bottom: 30px;">
+            ${institution?.logo_url ? `
+              <div style="display: inline-block; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <img src="${institution.logo_url}" alt="${institution.name}" style="height: 80px; width: auto; object-fit: contain; display: block;">
+              </div>
+            ` : ''}
           </div>
+          
+          <!-- Institution Name -->
+          <h1 style="margin: 0 0 15px 0; font-size: 36px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">
+            ${institution?.name?.toUpperCase() || 'INSTITUTION'}
+          </h1>
+          
+          <!-- Certificate Title -->
+          <div style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 50px; margin: 20px 0; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600; color: white; letter-spacing: 1px;">ACADEMIC RESULT CERTIFICATE</h2>
+          </div>
+          
+          <!-- Decorative Line -->
+          <div style="width: 200px; height: 3px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); margin: 20px auto; border-radius: 2px;"></div>
         </div>
         
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #1f2937;">STUDENT INFORMATION</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- Student Information Section -->
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 40px; border-radius: 20px; margin-bottom: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+          <h3 style="margin: 0 0 30px 0; font-size: 20px; font-weight: 600; color: #334155; text-transform: uppercase; letter-spacing: 1px; text-align: center; position: relative;">
+            <span style="background: white; padding: 0 20px; position: relative; z-index: 1;">Student Information</span>
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+          </h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
             <div>
-              <p style="margin: 0 0 8px 0;"><strong>Name:</strong> ${result?.student_name}</p>
-              <p style="margin: 0 0 8px 0;"><strong>Register Number:</strong> ${result?.register_number}</p>
-              ${result?.class ? `<p style="margin: 0;"><strong>Class:</strong> ${result.class}</p>` : ''}
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Student Name</label>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 12px 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0;">${result?.student_name || 'N/A'}</p>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Class</label>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 12px 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0;">${result?.class || 'N/A'}</p>
+              </div>
+            </div>
+            <div>
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Register Number</label>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 12px 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0;">${result?.register_number || 'N/A'}</p>
+              </div>
+              <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Certificate Date</label>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 12px 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0;">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              </div>
             </div>
           </div>
         </div>
         
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #1f2937;">SUBJECT PERFORMANCE</h3>
-          <table style="width: 100%; border-collapse: collapse; border: 2px solid #d1d5db;">
+        <!-- Subject Performance Section -->
+        <div style="background: white; padding: 40px; border-radius: 20px; margin-bottom: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+          <h3 style="margin: 0 0 30px 0; font-size: 20px; font-weight: 600; color: #334155; text-transform: uppercase; letter-spacing: 1px; text-align: center; position: relative;">
+            <span style="background: white; padding: 0 20px; position: relative; z-index: 1;">Subject Performance</span>
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+          </h3>
+          
+          <table style="width: 100%; border-collapse: collapse; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
             <thead>
-              <tr style="background: #2962ff; color: white;">
-                <th style="padding: 12px; text-align: left; font-weight: bold;">Subject</th>
-                <th style="padding: 12px; text-align: center; font-weight: bold;">Marks</th>
-                <th style="padding: 12px; text-align: center; font-weight: bold;">Grade</th>
+              <tr style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);">
+                <th style="padding: 20px; text-align: left; font-weight: 600; color: white; font-size: 16px; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2);">Subject</th>
+                <th style="padding: 20px; text-align: center; font-weight: 600; color: white; font-size: 16px; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.2);">Marks Obtained</th>
+                <th style="padding: 20px; text-align: center; font-weight: 600; color: white; font-size: 16px; letter-spacing: 0.5px;">Grade</th>
               </tr>
             </thead>
             <tbody>
@@ -271,63 +318,89 @@ const StudentResult = () => {
                 const status = passMark ? (subject.marks >= passMark.pass_mark ? 'PASS' : 'FAIL') : 'PASS';
                 const grade = passMark ? (subject.marks >= passMark.pass_mark ? 'A+' : 'C') : 'A+';
                 const bgColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
-                const markColor = subject.marks >= 80 ? '#dcfce7' : subject.marks >= 60 ? '#fef3c7' : '#fee2e2';
+                const markColor = subject.marks >= 80 ? '#10b981' : subject.marks >= 60 ? '#f59e0b' : '#ef4444';
+                const markBg = subject.marks >= 80 ? '#d1fae5' : subject.marks >= 60 ? '#fef3c7' : '#fee2e2';
                 return `
                   <tr style="background: ${bgColor};">
-                    <td style="padding: 12px; border-top: 1px solid #e5e7eb;">${subject.name}</td>
-                    <td style="padding: 12px; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <span style="background: ${markColor}; color: ${subject.marks >= 80 ? '#166534' : subject.marks >= 60 ? '#92400e' : '#991b1b'}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                    <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500;">${subject.name}</td>
+                    <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                      <span style="background: ${markBg}; color: ${markColor}; padding: 8px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; display: inline-block; min-width: 60px;">
                         ${subject.marks}
                       </span>
                     </td>
-                    <td style="padding: 12px; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <span style="background: ${status === 'PASS' ? '#dcfce7' : '#fee2e2'}; color: ${status === 'PASS' ? '#166534' : '#991b1b'}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                    <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                      <span style="background: ${status === 'PASS' ? '#d1fae5' : '#fee2e2'}; color: ${status === 'PASS' ? '#10b981' : '#ef4444'}; padding: 8px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; display: inline-block; min-width: 60px;">
                         ${grade}
                       </span>
                     </td>
                   </tr>
                 `;
-              }).join('') || '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #6b7280;">No subjects data available</td></tr>'}
+              }).join('') || '<tr><td colspan="3" style="padding: 40px; text-align: center; color: #6b7280; font-size: 16px;">No subjects data available</td></tr>'}
             </tbody>
           </table>
         </div>
         
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #1f2937;">ACADEMIC SUMMARY</h3>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        <!-- Academic Summary Section -->
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 40px; border-radius: 20px; margin-bottom: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+          <h3 style="margin: 0 0 30px 0; font-size: 20px; font-weight: 600; color: #334155; text-transform: uppercase; letter-spacing: 1px; text-align: center; position: relative;">
+            <span style="background: white; padding: 0 20px; position: relative; z-index: 1;">Academic Summary</span>
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+          </h3>
+          
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;">
             ${result?.total !== null ? `
-              <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #e5e7eb; text-align: center;">
-                <div style="font-size: 24px; font-weight: bold; color: #2962ff; margin-bottom: 8px;">${result.total}</div>
-                <div style="font-size: 14px; color: #6b7280;">Total Marks</div>
+              <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                  <span style="font-size: 24px; font-weight: 700; color: white;">∑</span>
+                </div>
+                <div style="font-size: 32px; font-weight: 700; color: #3b82f6; margin-bottom: 10px;">${result.total}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Total Marks</div>
               </div>
             ` : ''}
             ${result?.grade ? `
-              <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #e5e7eb; text-align: center;">
-                <div style="font-size: 24px; font-weight: bold; color: #22c55e; margin-bottom: 8px;">${result.grade}</div>
-                <div style="font-size: 14px; color: #6b7280;">Grade</div>
+              <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                  <span style="font-size: 24px; font-weight: 700; color: white;">A+</span>
+                </div>
+                <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 10px;">${result.grade}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Grade</div>
               </div>
             ` : ''}
             ${result?.rank ? `
-              <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #e5e7eb; text-align: center;">
-                <div style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-bottom: 8px;">${result.rank}</div>
-                <div style="font-size: 14px; color: #6b7280;">Rank</div>
+              <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                  <span style="font-size: 24px; font-weight: 700; color: white;">#</span>
+                </div>
+                <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 10px;">${result.rank}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Rank</div>
               </div>
             ` : ''}
           </div>
         </div>
         
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: #1f2937;">INSTITUTION DETAILS</h3>
-          <div style="text-align: center;">
-            <p style="margin: 0 0 8px 0;"><strong>Institution:</strong> ${institution?.name}</p>
-            ${institution?.footer_message ? `<p style="margin: 0;"><strong>Message:</strong> ${institution.footer_message}</p>` : ''}
+        <!-- Footer Section -->
+        <div style="text-align: center; margin-top: 50px; padding-top: 40px; border-top: 2px solid #e2e8f0; position: relative;">
+          <!-- Decorative Elements -->
+          <div style="position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 100px; height: 2px; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 1px;"></div>
+          
+          <div style="margin-bottom: 20px;">
+            <div style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 50px; border: 1px solid #e2e8f0;">
+              <h4 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">${institution?.name || 'INSTITUTION'}</h4>
+            </div>
           </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 4px solid #d1d5db;">
-          <div style="font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">${institution?.name}</div>
-          <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Official Result Certificate</div>
-          <div style="font-size: 12px; color: #9ca3af;">Generated on ${new Date().toLocaleDateString()}</div>
+          
+          <div style="margin-bottom: 15px;">
+            <p style="margin: 0; font-size: 16px; color: #64748b; font-weight: 500;">Official Result Certificate</p>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <p style="margin: 0; font-size: 14px; color: #94a3b8;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+          
+          <!-- Verification Badge -->
+          <div style="display: inline-block; padding: 8px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 20px; margin-top: 15px;">
+            <p style="margin: 0; font-size: 12px; font-weight: 600; color: white; letter-spacing: 0.5px;">✓ VERIFIED CERTIFICATE</p>
+          </div>
         </div>
       `;
       
