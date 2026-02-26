@@ -958,17 +958,17 @@ const StudentResult = () => {
 
             <div className="space-y-2 print:space-y-1 print:hidden" id="result-card">
 
-              <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/90 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
+              <Card className="border-0 shadow-2xl sm:shadow-3xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black">
 
-                <CardContent className="p-4 sm:p-10 space-y-4 sm:space-y-10 print:p-2 print:space-y-2">
+                <CardContent className="p-6 sm:p-12 space-y-6 sm:space-y-12 print:p-3 print:space-y-3">
 
                   {Array.isArray(result.subjects) && result.subjects.length > 0 && (
 
                     <div className="space-y-6">
 
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                      <div className="flex items-center gap-4 mb-6 sm:mb-8">
 
-                        <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg">
+                        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-xl sm:shadow-2xl">
 
                           <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
 
@@ -978,7 +978,7 @@ const StudentResult = () => {
 
                       </div>
 
-                      <div className="rounded-xl sm:rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+                      <div className="rounded-xl sm:rounded-2xl border border-slate-200/50 overflow-hidden shadow-xl sm:shadow-2xl">
 
                         {/* Mobile Card Layout */}
 
@@ -1072,21 +1072,21 @@ const StudentResult = () => {
 
                           <Table>
 
-                            <TableHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+                            <TableHeader className="bg-gradient-to-r from-slate-100 to-slate-200 border-b-2 border-slate-300">
 
                               <TableRow>
 
-                                <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4">Subject</TableHead>
+                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5">Subject</TableHead>
 
-                                <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4 text-right">Marks Obtained</TableHead>
+                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-right">Marks Obtained</TableHead>
 
-                                <TableHead className="text-sm font-bold text-slate-700 uppercase tracking-wider px-4 sm:px-6 py-3 sm:py-4 text-center">Status</TableHead>
+                                <TableHead className="text-sm font-bold text-slate-800 uppercase tracking-wider px-6 sm:px-8 py-4 sm:py-5 text-center">Status</TableHead>
 
                               </TableRow>
 
                             </TableHeader>
 
-                            <TableBody className="divide-y divide-slate-200">
+                            <TableBody className="divide-y divide-slate-200/60">
 
                               {result.subjects.map((s: any, i: number) => {
 
@@ -1186,7 +1186,7 @@ const StudentResult = () => {
 
                   
 
-                  <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 border-t border-slate-200 pt-8 sm:pt-10">
+                  <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 border-t border-slate-200 pt-12 sm:pt-16">
 
                     {result.total != null && (
 
@@ -1280,7 +1280,7 @@ const StudentResult = () => {
 
       {/* Action Buttons */}
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center print:hidden mt-12">
 
             <Button 
 
@@ -1304,7 +1304,7 @@ const StudentResult = () => {
 
                   <span className="text-sm sm:text-base font-bold block">Download Certificate</span>
 
-                  <span className="text-xs sm:text-sm opacity-90">Professional PDF Format</span>
+                  <span className="text-xs sm:text-sm opacity-90">Professional JPG Format</span>
 
                 </div>
 
