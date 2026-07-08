@@ -111,6 +111,47 @@ export type Database = {
         }
         Relationships: []
       }
+      pass_marks: {
+        Row: {
+          class: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          institution_id: string
+          pass_mark: number
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          class: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          institution_id: string
+          pass_mark: number
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          class?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          institution_id?: string
+          pass_mark?: number
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass_marks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_results: {
         Row: {
           class: string | null
@@ -207,6 +248,21 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_institution_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          footer_message: string
+          id: string
+          logo_url: string
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_institution_id_for_admin: {
         Args: { _user_id: string }
         Returns: string
@@ -216,6 +272,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      update_institution_logo: {
+        Args: { p_institution_id: string; p_logo_url?: string }
+        Returns: Json
+      }
+      verify_institution_admin_access: {
+        Args: { _institution_slug: string; _user_id: string }
         Returns: boolean
       }
     }
