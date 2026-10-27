@@ -1489,7 +1489,10 @@ const StudentResult = () => {
 
                       </div>
 
+                    </div>
+
                   )}
+
 
 
                   {/* Mobile Download Button */}
