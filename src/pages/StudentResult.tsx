@@ -1283,7 +1283,9 @@ const StudentResult = () => {
                                   </span>
                                 </div>
                               </div>
+                              </div>
                             );
+
                           }
                           
                           // Use the custom pass mark to determine pass/fail
