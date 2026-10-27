@@ -954,7 +954,10 @@ const StudentResult = () => {
 
                 </CardContent>
 
+                </div>
+
               </Card>
+
 
 
 
@@ -1060,9 +1063,12 @@ const StudentResult = () => {
 
                 </CardContent>
 
+                </div>
+
               </Card>
 
             </div>
+
 
           ) : (
             <div className="space-y-6 print:space-y-4" id="result-card">
@@ -1198,7 +1204,11 @@ const StudentResult = () => {
                     </div>
                   </div>
                 )}
+
+                </div>
+
               </Card>
+
 
               {/* Subject-wise Performance Card */}
               <Card className="border-0 shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden bg-white/95 backdrop-blur-sm print:shadow-none print:border-2 print:border-black relative group hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:scale-[1.01]">
