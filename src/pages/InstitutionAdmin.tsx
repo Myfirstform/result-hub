@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 import { Badge } from "@/components/ui/badge";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
@@ -74,6 +74,9 @@ const InstitutionAdmin = () => {
   const [previewData, setPreviewData] = useState<any[] | null>(null);
 
   const [uploading, setUploading] = useState(false);
+
+  const [publishImmediately, setPublishImmediately] = useState(true);
+
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -431,7 +434,7 @@ const InstitutionAdmin = () => {
         total: Number(total || Total) || null,
         grade: String(grade || Grade || ""),
         rank: String(rank || Rank || ""),
-        published: false,
+        published: publishImmediately,
       };
     }).filter((r) => r.register_number && r.student_name);
 
