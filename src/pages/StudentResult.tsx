@@ -1351,9 +1351,12 @@ const StudentResult = () => {
 
                               </div>
 
+                              </div>
+
                             </div>
 
                           );
+
 
                         })}
 
