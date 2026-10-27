@@ -18,9 +18,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 import { Badge } from "@/components/ui/badge";
 
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+
 
 import { toast } from "@/hooks/use-toast";
 import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen, AlertTriangle, CheckSquare, Square, Loader2 } from "lucide-react";
@@ -74,6 +77,9 @@ const InstitutionAdmin = () => {
   const [previewData, setPreviewData] = useState<any[] | null>(null);
 
   const [uploading, setUploading] = useState(false);
+
+  const [publishImmediately, setPublishImmediately] = useState(true);
+
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -431,7 +437,7 @@ const InstitutionAdmin = () => {
         total: Number(total || Total) || null,
         grade: String(grade || Grade || ""),
         rank: String(rank || Rank || ""),
-        published: false,
+        published: publishImmediately,
       };
     }).filter((r) => r.register_number && r.student_name);
 
@@ -446,7 +452,8 @@ const InstitutionAdmin = () => {
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: `${rows.length} results uploaded successfully` });
+      toast({ title: `${rows.length} results uploaded successfully`, description: publishImmediately ? "Results are published and visible to students." : "Saved as drafts — use the publish button to make them visible." });
+
       setUploadDialogOpen(false);
       setPreviewData(null);
       fetchResults();
@@ -748,8 +755,19 @@ const InstitutionAdmin = () => {
                               </TableBody>
                             </Table>
                           </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="publish-immediately"
+                              checked={publishImmediately}
+                              onCheckedChange={(checked) => setPublishImmediately(checked === true)}
+                            />
+                            <Label htmlFor="publish-immediately" className="text-sm text-slate-700 cursor-pointer">
+                              Publish immediately (students can view results right away)
+                            </Label>
+                          </div>
                           <Button 
                             onClick={handleBulkInsert} 
+
                             disabled={uploading} 
                             className="w-full py-3 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                             style={{ backgroundColor: 'rgba(62, 45, 116)' }}

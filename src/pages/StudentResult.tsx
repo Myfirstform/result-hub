@@ -1283,7 +1283,9 @@ const StudentResult = () => {
                                   </span>
                                 </div>
                               </div>
+                              </div>
                             );
+
                           }
                           
                           // Use the custom pass mark to determine pass/fail
@@ -1349,9 +1351,12 @@ const StudentResult = () => {
 
                               </div>
 
+                              </div>
+
                             </div>
 
                           );
+
 
                         })}
 
@@ -1482,13 +1487,13 @@ const StudentResult = () => {
 
                         </div>
 
-                        </div>
-
                       </div>
 
                     </div>
 
                   )}
+
+
 
                   {/* Mobile Download Button */}
 
