@@ -18,32 +18,34 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    try {
+      const { error } = await signIn(email.trim(), password);
 
-    const { error } = await signIn(email, password);
+      if (error) {
+        let errorMessage = error.message;
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Please confirm your email address before logging in.";
+        } else if (error.message.includes("Too many requests")) {
+          errorMessage = "Too many login attempts. Please try again later.";
+        }
 
-    if (error) {
-      console.error("Login error:", error);
-      
-      // Provide more specific error messages
-      let errorMessage = error.message;
-      if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Please confirm your email address before logging in.";
-      } else if (error.message.includes("Too many requests")) {
-        errorMessage = "Too many login attempts. Please try again later.";
+        toast({ title: "Login failed", description: errorMessage, variant: "destructive" });
+        return;
       }
-      
-      toast({ 
-        title: "Login failed", 
-        description: errorMessage, 
-        variant: "destructive" 
-      });
-    } else {
+
       toast({ title: "Welcome back!" });
       navigate("/admin");
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Unable to sign in. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

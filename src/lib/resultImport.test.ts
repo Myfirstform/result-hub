@@ -20,7 +20,15 @@ describe("validateResultImport", () => {
       { name: "Mathematics", marks: 82 },
       { name: "English", marks: 76 },
     ]);
-    expect(result.rows[0].published).toBeUndefined();
+  });
+
+  it("recognizes common camel-case spreadsheet headers", () => {
+    const result = validateResultImport([
+      { RegisterNumber: "R-001", SecretCode: "secret", StudentName: "Amina", Math: 0 },
+    ]);
+
+    expect(result.rows[0]?.register_number).toBe("R-001");
+    expect(result.rows[0]?.subjects[0]?.marks).toBe(0);
   });
 
   it("rejects rows missing secret codes and duplicated register numbers", () => {

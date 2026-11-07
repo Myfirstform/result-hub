@@ -21,11 +21,11 @@ export interface ResultImportValidation {
 }
 
 const FIELD_ALIASES = {
-  register_number: ["register_number", "register_no", "reg_no", "reg_number", "registration_number"],
-  secret_code: ["secret_code", "access_code"],
-  student_name: ["student_name", "name"],
+  register_number: ["register_number", "registernumber", "register_no", "reg_no", "regno", "reg_number", "registration_number"],
+  secret_code: ["secret_code", "secretcode", "access_code"],
+  student_name: ["student_name", "studentname", "name"],
   class: ["class", "category", "standard"],
-  total: ["total", "total_marks"],
+  total: ["total", "total_marks", "totalmarks"],
   grade: ["grade"],
   rank: ["rank"],
 } as const;
