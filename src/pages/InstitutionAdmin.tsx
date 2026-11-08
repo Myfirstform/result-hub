@@ -21,14 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { Checkbox } from "@/components/ui/checkbox";
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/use-toast";
 import { Upload, Trash2, Eye, EyeOff, Search, FileSpreadsheet, Users, TrendingUp, Filter, Download, RefreshCw, ImageIcon, X, Settings, CheckCircle, AlertCircle, Plus, Edit2, Save, BookOpen, AlertTriangle, CheckSquare, Square, Loader2 } from "lucide-react";
 
 import * as XLSX from "xlsx";
+import { validateResultImport, type ResultImportIssue } from "@/lib/resultImport";
 
 
 
@@ -74,7 +73,8 @@ const InstitutionAdmin = () => {
 
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
-  const [previewData, setPreviewData] = useState<any[] | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, unknown>[] | null>(null);
+  const [previewIssues, setPreviewIssues] = useState<ResultImportIssue[]>([]);
 
   const [uploading, setUploading] = useState(false);
 
@@ -192,16 +192,22 @@ const InstitutionAdmin = () => {
   };
 
   const fetchResults = async () => {
-    if (!institutionId) return;
+    if (!institutionId) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("student_results")
       .select("id, register_number, secret_code, student_name, class, subjects, total, grade, rank, published, created_by")
       .eq("institution_id", institutionId)
-      .eq("created_by", user?.id)
       .order("created_at", { ascending: false });
 
+    if (error) {
+      toast({ title: "Could not load results", description: error.message, variant: "destructive" });
+    }
     setResults((data as unknown as StudentResult[]) || []);
     setLoading(false);
   };
@@ -278,27 +284,40 @@ const InstitutionAdmin = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     const file = e.target.files?.[0];
-
     if (!file) return;
-
-
+    const extension = file.name.toLowerCase().split(".").pop();
+    if (!extension || !["csv", "xls", "xlsx"].includes(extension)) {
+      setPreviewData(null);
+      setPreviewIssues([{ row: null, message: "Choose a CSV or Excel workbook." }]);
+      return;
+    }
 
     const reader = new FileReader();
-
-    reader.onload = (evt) => {
-
-      const wb = XLSX.read(evt.target?.result, { type: "binary" });
-
-      const ws = wb.Sheets[wb.SheetNames[0]];
-
-      const data = XLSX.utils.sheet_to_json(ws);
-
-      setPreviewData(data);
-
+    reader.onerror = () => {
+      setPreviewData(null);
+      setPreviewIssues([{ row: null, message: "The selected file could not be read." }]);
+      toast({ title: "Could not read file", description: "Choose the spreadsheet and try again.", variant: "destructive" });
     };
-
-    reader.readAsBinaryString(file);
-
+    reader.onload = (event) => {
+      try {
+        const workbook = XLSX.read(event.target?.result, { type: "array", cellDates: false });
+        const firstSheetName = workbook.SheetNames[0];
+        const firstSheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
+        if (!firstSheet) {
+          setPreviewData([]);
+          setPreviewIssues([{ row: null, message: "The workbook does not contain a worksheet." }]);
+          return;
+        }
+        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "" });
+        const validation = validateResultImport(rows, results.map((result) => result.register_number));
+        setPreviewData(rows);
+        setPreviewIssues(validation.issues);
+      } catch {
+        setPreviewData(null);
+        setPreviewIssues([{ row: null, message: "This spreadsheet could not be parsed. Save it as CSV or Excel and retry." }]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
 
 
