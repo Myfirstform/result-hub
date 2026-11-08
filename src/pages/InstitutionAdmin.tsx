@@ -651,7 +651,20 @@ const InstitutionAdmin = () => {
                         </Button>
                       </div>
                       
-                      {previewData && (
+                      {previewIssues.length > 0 && (
+                        <div role="alert" className="max-h-32 overflow-y-auto border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                          <p className="font-semibold">Fix these issues before uploading:</p>
+                          <ul className="mt-1 list-disc pl-5">
+                            {previewIssues.map((issue, index) => (
+                              <li key={`${issue.row ?? "sheet"}-${index}`}>
+                                {issue.row ? `Row ${issue.row}: ` : ""}{issue.message}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {previewData && previewData.length > 0 && (
                         <>
                           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                             <p className="text-sm font-medium text-emerald-800">
@@ -674,7 +687,7 @@ const InstitutionAdmin = () => {
                                   <TableRow key={i} className="border-b border-slate-100">
                                     {Object.values(row).map((v, j) => (
                                       <TableCell key={j} className="text-xs text-slate-600 px-3 py-2">
-                                        {String(v)}
+                                        {String(v ?? "")}
                                       </TableCell>
                                     ))}
                                   </TableRow>
@@ -695,7 +708,7 @@ const InstitutionAdmin = () => {
                           <Button 
                             onClick={handleBulkInsert} 
 
-                            disabled={uploading} 
+                            disabled={uploading || previewIssues.length > 0} 
                             className="w-full py-3 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                             style={{ backgroundColor: 'rgba(62, 45, 116)' }}
                           >
