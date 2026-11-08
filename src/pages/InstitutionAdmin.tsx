@@ -324,174 +324,82 @@ const InstitutionAdmin = () => {
 
   const handleBulkInsert = async () => {
     if (!previewData) return;
-    
-    setUploading(true);
-
-    // Get institution_id from database function to ensure it's always available
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({ title: "User not authenticated", variant: "destructive" });
-      setUploading(false);
+    const validation = validateResultImport(previewData, results.map((result) => result.register_number));
+    setPreviewIssues(validation.issues);
+    if (validation.issues.length > 0 || validation.rows.length === 0) {
+      toast({ title: "Review the spreadsheet", description: "Fix the listed rows before uploading.", variant: "destructive" });
+      return;
+    }
+    if (!institutionId) {
+      toast({ title: "Institution not assigned", description: "Ask the platform administrator to assign your institution access.", variant: "destructive" });
       return;
     }
 
-    let finalInstitutionId = null;
+    setUploading(true);
+    try {
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      if (userError || !currentUser) throw userError ?? new Error("Please sign in again before uploading.");
 
-    // Try to get institution ID from database
-    const { data: institutionData, error: institutionError } = await supabase
-      .rpc('get_institution_id_for_admin', { _user_id: user.id });
-    
-    if (institutionData) {
-      finalInstitutionId = institutionData;
-    } else {
-      // If user has institution_admin role but no institution assignment,
-      // we need to either create one or use a default
-      console.log("No institution assignment found, checking for institutions...");
-      
-      // Try multiple approaches to find institutions
-      let institutions = null;
-      let instError = null;
-      
-      // Approach 1: Direct query (might be blocked by RLS)
-      const directQuery = await supabase
-        .from("institutions")
-        .select("id, name")
-        .limit(1);
-      
-      institutions = directQuery.data;
-      instError = directQuery.error;
-      
-      console.log("Direct query result:", { institutions, instError });
-      
-      // Approach 2: Skip RPC for now since it may not exist
-      // if (!institutions || institutions.length === 0) {
-      //   console.log("Direct query failed, trying RPC...");
-      //   try {
-      //     const rpcQuery = await supabase
-      //       .rpc('get_all_institutions_for_super_admin');
-          
-      //     console.log("RPC query result:", { data: rpcQuery.data, error: rpcQuery.error });
-          
-      //     if (rpcQuery.data && rpcQuery.data.length > 0) {
-      //       institutions = rpcQuery.data;
-      //     }
-      //   } catch (rpcError) {
-      //     console.log("RPC not available or failed:", rpcError);
-      //   }
-      // }
-      
-      // Approach 3: If all else fails, show a helpful error
-      if (!institutions || institutions.length === 0) {
-        console.log("All approaches failed, showing error");
-        toast({ 
-          title: "No institution access", 
-          description: "You have admin role but no institution assignment. Please contact a super admin to assign you to an institution.", 
-          variant: "destructive" 
-        });
-        setUploading(false);
+      const registerNumbers = validation.rows.map((row) => row.register_number);
+      const { data: existingRows, error: duplicateCheckError } = await supabase
+        .from("student_results")
+        .select("register_number")
+        .eq("institution_id", institutionId)
+        .in("register_number", registerNumbers);
+      if (duplicateCheckError) throw duplicateCheckError;
+      if (existingRows && existingRows.length > 0) {
+        const existingNumbers = new Set(existingRows.map((row) => row.register_number.toLowerCase()));
+        const issues = validation.rows
+          .filter((row) => existingNumbers.has(row.register_number.toLowerCase()))
+          .map((row) => ({ row: row.sourceRow, message: `Register number ${row.register_number} already exists in this institution.` }));
+        setPreviewIssues(issues);
+        toast({ title: "Duplicate register numbers", description: "Remove existing students from the spreadsheet before uploading.", variant: "destructive" });
         return;
       }
-      
-      // Use the first institution found
-      finalInstitutionId = institutions[0].id;
-      console.log("Using institution:", institutions[0]);
-      
-      // Create admin assignment
-      const { error: createError } = await supabase
-        .from("institution_admins")
-        .insert({ user_id: user.id, institution_id: finalInstitutionId });
-      
-      if (createError) {
-        console.error("Failed to create admin assignment:", createError);
-        toast({ 
-          title: "Assignment failed", 
-          description: "Could not assign you to institution. Please contact admin.", 
-          variant: "destructive" 
-        });
-      } else {
-        console.log("Created admin assignment for institution:", finalInstitutionId);
-        toast({ 
-          title: "Institution assigned", 
-          description: "You have been assigned to an institution. Please refresh the page.", 
-        });
-      }
-    }
-    
-    if (!finalInstitutionId) {
-      toast({ 
-        title: "No institution available", 
-        description: "No institutions found in the system. Please contact the platform administrator to create an institution first.", 
-        variant: "destructive" 
-      });
-      setUploading(false);
-      return;
-    }
 
-
-
-    const rows = previewData.map((row: any) => {
-
-      // Extract known fields, rest becomes subjects
-
-      const { register_number, RegisterNumber, "Register Number": regNum,
-
-        secret_code, SecretCode, "Secret Code": secCode,
-
-        student_name, StudentName, "Student Name": stuName,
-
-        class: cls, Class: cls2, total, Total, grade, Grade, rank, Rank,
-
-        ...subjectFields } = row;
-
-      const subjects = Object.entries(subjectFields).map(([name, marks]) => ({ name, marks: Number(marks) || 0 }));
-
-      return {
-        institution_id: finalInstitutionId,
-        created_by: user.id, // Track which admin uploaded this data
-        register_number: String(register_number || RegisterNumber || regNum || ""),
-        secret_code: String(secret_code || SecretCode || secCode || ""),
-        student_name: String(student_name || StudentName || stuName || ""),
-        class: String(cls || cls2 || ""),
-        subjects,
-        total: Number(total || Total) || null,
-        grade: String(grade || Grade || ""),
-        rank: String(rank || Rank || ""),
+      const rows = validation.rows.map(({ sourceRow: _sourceRow, ...row }) => ({
+        ...row,
+        institution_id: institutionId,
+        created_by: currentUser.id,
         published: publishImmediately,
-      };
-    }).filter((r) => r.register_number && r.student_name);
+      }));
+      const { error } = await supabase.from("student_results").insert(rows);
+      if (error) throw error;
 
-    if (rows.length === 0) {
-      toast({ title: "No valid rows found", variant: "destructive" });
-      setUploading(false);
-      return;
-    }
-
-    const { error } = await supabase.from("student_results").insert(rows);
-
-    if (error) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: `${rows.length} results uploaded successfully`, description: publishImmediately ? "Results are published and visible to students." : "Saved as drafts — use the publish button to make them visible." });
-
+      const { data: insertedResults, error: refreshError } = await supabase
+        .from("student_results")
+        .select("id, register_number, secret_code, student_name, class, subjects, total, grade, rank, published, created_by")
+        .eq("institution_id", institutionId)
+        .order("created_at", { ascending: false });
+      if (refreshError) throw refreshError;
+      setResults((insertedResults as unknown as StudentResult[]) || []);
+      toast({
+        title: `${rows.length} results uploaded successfully`,
+        description: publishImmediately ? "Results are published and visible to students." : "Saved as drafts — publish them when ready.",
+      });
       setUploadDialogOpen(false);
       setPreviewData(null);
-      fetchResults();
+      setPreviewIssues([]);
+      if (fileRef.current) fileRef.current.value = "";
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "The results could not be saved. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
-
-    setUploading(false);
   };
-
-
 
   const togglePublish = async (id: string, current: boolean) => {
-
-    await supabase.from("student_results").update({ published: !current }).eq("id", id);
-
-    fetchResults();
-
+    const { error } = await supabase.from("student_results").update({ published: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "Could not update result visibility", description: error.message, variant: "destructive" });
+      return;
+    }
+    await fetchResults();
   };
-
-
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this result?")) return;
