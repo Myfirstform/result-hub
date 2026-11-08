@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { toast } from "@/hooks/use-toast";
 
-import { GraduationCap, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown } from "lucide-react";
+import { GraduationCap, Loader2, SearchX, Search, Award, TrendingUp, Users, CheckCircle, AlertCircle, RefreshCw, Download, Star, Trophy, Target, Calendar, BookOpen, BarChart3, Sparkles, Medal, Crown, FileDown, ImageIcon } from "lucide-react";
 
 import html2canvas from 'html2canvas';
 
@@ -91,6 +91,7 @@ const StudentResult = () => {
   const [institution, setInstitution] = useState<InstitutionInfo | null>(null);
 
   const [notFound, setNotFound] = useState(false);
+  const [institutionLoadError, setInstitutionLoadError] = useState<string | null>(null);
 
   const [regNumber, setRegNumber] = useState("");
 
@@ -144,85 +145,25 @@ const StudentResult = () => {
       try {
         console.log("Fetching institution for slug:", slug);
         
-        // Retry logic for network timeouts
-        let retryCount = 0;
-        const maxRetries = 3;
-        let institutionData = null;
-        let error = null;
-        
-        while (retryCount < maxRetries && !institutionData) {
-          try {
-            // Add timeout to the request
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-            
-            const { data: data, error: err } = await supabase
-              .from("institutions")
-              .select("id, name, logo_url, footer_message, status")
-              .eq("slug", slug)
-              .maybeSingle();
-            
-            clearTimeout(timeoutId);
-            
-            if (err) {
-              throw err;
-            }
-            
-            institutionData = data;
-            error = err;
-            break;
-          } catch (err) {
-            retryCount++;
-            console.log(`Retry ${retryCount}/${maxRetries} failed:`, err);
-            
-            if (retryCount < maxRetries) {
-              // Wait before retry (exponential backoff)
-              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
-            } else {
-              error = err;
-            }
-          }
-        }
-        
-        console.log("Institution query result:", { data: institutionData, error });
-        
+        const { data: institutionData, error } = await supabase
+          .from("institutions")
+          .select("id, name, logo_url, footer_message, status")
+          .eq("slug", slug)
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (error) throw error;
         if (institutionData) {
           setInstitution(institutionData);
         } else {
-          console.log("Institution not found after retries:", error);
-          
-          // Fallback: Try to use cached data or default
-          const fallbackData = {
-            id: 'fallback',
-            name: 'Institution',
-            logo_url: null,
-            footer_message: 'Result Portal',
-            status: 'active'
-          };
-          
-          setInstitution(fallbackData);
-          toast({ 
-            title: "Network Issue", 
-            description: "Using offline mode. Some features may be limited.",
-            variant: "destructive" 
-          });
+          setNotFound(true);
         }
       } catch (err) {
         console.error("Error fetching institution:", err);
-        
-        // Fallback for critical errors
-        const fallbackData = {
-          id: 'fallback',
-          name: 'Institution',
-          logo_url: null,
-          footer_message: 'Result Portal',
-          status: 'active'
-        };
-        
-        setInstitution(fallbackData);
+        setInstitutionLoadError(err instanceof Error ? err.message : "Unable to connect to the result service.");
         toast({ 
           title: "Network Error", 
-          description: "Unable to connect. Using offline mode.",
+          description: "Unable to load this institution. Please try again shortly.",
           variant: "destructive" 
         });
       } finally {
