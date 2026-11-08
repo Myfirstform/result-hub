@@ -24,173 +24,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchRoleData = async (userId: string) => {
-    console.log("fetchRoleData called for userId:", userId);
-    
-    try {
-      // Check if user has super_admin role first
-      const { data: superAdminData, error: superAdminError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "super_admin")
-        .maybeSingle();
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (roleError) throw roleError;
 
-      console.log("Super admin check result:", { superAdminData, superAdminError });
-
-      if (superAdminData) {
-        console.log("User is super admin");
-        setRole("super_admin");
-        return;
-      }
-
-      // Check if user has institution_admin role
-      const { data: institutionAdminData, error: institutionAdminError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "institution_admin")
-        .maybeSingle();
-
-      console.log("Institution admin check result:", { institutionAdminData, institutionAdminError });
-
-      if (institutionAdminData) {
-        console.log("User is institution admin");
-        setRole("institution_admin");
-        
-        // Get institution ID for institution admin
-        const { data: adminData, error: adminError } = await supabase
-          .from("institution_admins")
-          .select("institution_id")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        console.log("Admin query result:", { adminData, adminError });
-
-        if (adminData) {
-          console.log("Setting institutionId:", adminData.institution_id);
-          setInstitutionId(adminData.institution_id);
-        } else {
-          console.log("No institution assignment found, but user has role");
-          // User has role but no institution assignment - this is okay for multi-institution access
-        }
-        return;
-      }
-
-      // Fallback: Check if user has institution_admins entry but no user_roles entry
-      const { data: orphanedAdmin } = await supabase
-        .from("institution_admins")
-        .select("institution_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      console.log("Orphaned admin check result:", { orphanedAdmin });
-
-      if (orphanedAdmin) {
-        console.log("Found orphaned institution admin, creating role entry");
-        // Create missing user_roles entry
-        const { error: insertError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role: "institution_admin" });
-        
-        if (insertError) {
-          console.error("Failed to create user role entry:", insertError);
-        } else {
-          console.log("Successfully created user role entry");
-        }
-        
-        setRole("institution_admin");
-        setInstitutionId(orphanedAdmin.institution_id);
-        return;
-      }
-
-      // Additional fallback: Check if user exists in auth.users but has no roles
-      // Note: We can't use admin API from client side, so we'll use a different approach
-      const { data: userCheck } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      
-      if (!userCheck) {
-        console.log("User exists in auth but has no roles - checking if they should be institution admin");
-        
-        // Check if there are any institutions this user should have access to
-        const { data: institutions } = await supabase
-          .from("institutions")
-          .select("id, name, slug")
-          .eq("status", "active")
-          .limit(1);
-        
-        if (institutions && institutions.length > 0) {
-          console.log("Found active institutions, auto-assigning institution admin role");
-          // Auto-assign institution admin role for users without roles
-          const { error: autoAssignError } = await supabase
-            .from("user_roles")
-            .insert({ user_id: userId, role: "institution_admin" });
-          
-          if (!autoAssignError) {
-            // Also create institution_admins entry
-            await supabase
-              .from("institution_admins")
-              .insert({ user_id: userId, institution_id: institutions[0].id });
-            
-            setRole("institution_admin");
-            setInstitutionId(institutions[0].id);
-            return;
-          }
-        }
-      }
-
-      console.log("No role found for user");
-      setRole(null);
-      setInstitutionId(null);
-      
-    } catch (error) {
-      console.error("Unexpected error in fetchRoleData:", error);
-      setRole(null);
-      setInstitutionId(null);
+    const roles = roleData?.map((entry) => entry.role) ?? [];
+    if (roles.includes("super_admin")) {
+      return { role: "super_admin" as const, institutionId: null };
     }
+    if (!roles.includes("institution_admin")) {
+      return { role: null, institutionId: null };
+    }
+
+    const { data: assignedInstitutionId, error: institutionError } = await supabase
+      .rpc("get_institution_id_for_admin", { _user_id: userId });
+    if (institutionError) throw institutionError;
+    return { role: "institution_admin" as const, institutionId: assignedInstitutionId };
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Auth state changed:", { event: _event, hasSession: !!session });
-        setSession(session);
-        setUser(session?.user ?? null);
+    let active = true;
+    let authVersion = 0;
+    let receivedAuthEvent = false;
 
-        if (session?.user) {
-          // Simple immediate fetch with fallback
-          fetchRoleData(session.user.id);
-        } else {
-          setRole(null);
-          setInstitutionId(null);
-        }
+    const applySession = async (nextSession: Session | null, version: number) => {
+      if (!active || version !== authVersion) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
+        setRole(null);
+        setInstitutionId(null);
         setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const roleData = await fetchRoleData(nextSession.user.id);
+        if (!active || version !== authVersion) return;
+        setRole(roleData.role);
+        setInstitutionId(roleData.institutionId);
+      } catch (error) {
+        console.error("Unable to load account access:", error);
+        if (!active || version !== authVersion) return;
+        setRole(null);
+        setInstitutionId(null);
+      } finally {
+        if (active && version === authVersion) setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        receivedAuthEvent = true;
+        authVersion += 1;
+        void applySession(nextSession, authVersion);
       }
     );
 
-    // Simple initial session check
     const checkInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial session check:", { hasSession: !!session });
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          fetchRoleData(session.user.id);
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!receivedAuthEvent) {
+          authVersion += 1;
+          await applySession(initialSession, authVersion);
         }
-        setLoading(false);
       } catch (error) {
-        console.error("Initial session check error:", error);
-        setLoading(false);
+        console.error("Unable to restore sign-in:", error);
+        if (active && !receivedAuthEvent) setLoading(false);
       }
     };
 
     checkInitialSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
