@@ -421,92 +421,69 @@ const StudentResult = () => {
 
 
   const handleSearch = async (e: React.FormEvent) => {
-
     e.preventDefault();
+    if (!institution || searching) return;
 
-    if (!institution) return;
+    const normalizedRegister = regNumber.trim();
+    const normalizedSecret = secretCode.trim();
+    if (!normalizedRegister || !normalizedSecret) return;
 
     setSearching(true);
-
     setResult(null);
-
-
-
-    await supabase.from("access_logs").insert({
-
+    void supabase.from("access_logs").insert({
       institution_id: institution.id,
-
-      register_number: regNumber,
-
+      register_number: normalizedRegister,
     });
 
+    let searchError: unknown = null;
+    let completed = false;
+    let resultData: ResultData | null = null;
 
+    try {
+      for (let attempt = 0; attempt < 3 && !completed; attempt += 1) {
+        try {
+          const { data, error } = await supabase
+            .from("student_results")
+            .select("student_name, register_number, class, subjects, total, grade, rank")
+            .eq("institution_id", institution.id)
+            .eq("register_number", normalizedRegister)
+            .eq("secret_code", normalizedSecret)
+            .eq("published", true)
+            .maybeSingle();
 
-    // Fetch student result with retry logic
-    let retryCount = 0;
-    const maxRetries = 3;
-    let resultData = null;
-    
-    while (retryCount < maxRetries && !resultData) {
-      try {
-        // Add timeout to the request
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const { data: data, error: err } = await supabase
-          .from("student_results")
-          .select("student_name, register_number, class, subjects, total, grade, rank")
-          .eq("institution_id", institution.id)
-          .eq("register_number", regNumber)
-          .eq("secret_code", secretCode)
-          .eq("published", true)
-          .maybeSingle({ signal: controller.signal });
-        
-        clearTimeout(timeoutId);
-        
-        if (err) {
-          throw err;
-        }
-        
-        resultData = data;
-        break;
-      } catch (err) {
-        retryCount++;
-        console.log(`Result search retry ${retryCount}/${maxRetries} failed:`, err);
-        
-        if (retryCount < maxRetries) {
-          // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
+          if (error) throw error;
+          completed = true;
+          resultData = data as ResultData | null;
+        } catch (error) {
+          searchError = error;
+          if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
         }
       }
-    }
 
-
-
-    if (resultData) {
-
-      setResult(resultData as ResultData);
-      
-      // Fetch pass marks for this institution
-      if (institution?.id) {
-        await fetchPassMarks(institution.id);
+      if (!completed) {
+        toast({
+          title: "Could not check results",
+          description: "The result service could not be reached. Please try again.",
+          variant: "destructive",
+        });
+        console.error("Result lookup failed:", searchError);
+        return;
       }
 
-    } else {
+      if (!resultData) {
+        toast({
+          title: "No published result found",
+          description: "Check the register number and secret code, or contact your institution.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Show network error instead of "no result found"
-      toast({ 
-        title: "Network Error", 
-        description: "Unable to connect to database. Please check your internet connection and try again.", 
-        variant: "destructive" 
-      });
-      
-      // Don't set searching to false immediately, allow user to retry
-      setTimeout(() => setSearching(false), 2000);
+      setResult(resultData);
+      await fetchPassMarks(institution.id);
+    } finally {
+      setSearching(false);
     }
-
-    setSearching(false);
-
   };
 
 
