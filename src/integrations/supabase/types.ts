@@ -274,6 +274,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_published_student_result: {
+        Args: {
+          _institution_id: string
+          _register_number: string
+          _secret_code: string
+        }
+        Returns: {
+          class: string
+          grade: string
+          rank: string
+          register_number: string
+          student_name: string
+          subjects: Json
+          total: number
+        }[]
+      }
       update_institution_logo: {
         Args: { p_institution_id: string; p_logo_url?: string }
         Returns: Json
