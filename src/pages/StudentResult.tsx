@@ -138,13 +138,15 @@ const StudentResult = () => {
   useEffect(() => {
 
     if (!slug) return;
-
+    let active = true;
+    setLoadingInst(true);
+    setInstitution(null);
+    setNotFound(false);
+    setInstitutionLoadError(null);
     
 
     const fetchInstitution = async () => {
       try {
-        console.log("Fetching institution for slug:", slug);
-        
         const { data: institutionData, error } = await supabase
           .from("institutions")
           .select("id, name, logo_url, footer_message, status")
@@ -154,27 +156,29 @@ const StudentResult = () => {
 
         if (error) throw error;
         if (institutionData) {
-          setInstitution(institutionData);
+          if (active) setInstitution(institutionData);
         } else {
-          setNotFound(true);
+          if (active) setNotFound(true);
         }
       } catch (err) {
         console.error("Error fetching institution:", err);
-        setInstitutionLoadError(err instanceof Error ? err.message : "Unable to connect to the result service.");
+        if (active) setInstitutionLoadError("Unable to load this institution. Please try again shortly.");
         toast({ 
           title: "Network Error", 
           description: "Unable to load this institution. Please try again shortly.",
           variant: "destructive" 
         });
       } finally {
-        setLoadingInst(false);
+        if (active) setLoadingInst(false);
       }
     };
 
     
 
     fetchInstitution();
-
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
 
