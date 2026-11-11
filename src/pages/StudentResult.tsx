@@ -22,6 +22,9 @@ import { GraduationCap, Loader2, SearchX, Search, Award, TrendingUp, Users, Chec
 
 import html2canvas from 'html2canvas';
 
+const escapeCertificateText = (value: string | number) =>
+  String(value).replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+
 
 
 interface InstitutionInfo {
@@ -138,13 +141,15 @@ const StudentResult = () => {
   useEffect(() => {
 
     if (!slug) return;
-
+    let active = true;
+    setLoadingInst(true);
+    setInstitution(null);
+    setNotFound(false);
+    setInstitutionLoadError(null);
     
 
     const fetchInstitution = async () => {
       try {
-        console.log("Fetching institution for slug:", slug);
-        
         const { data: institutionData, error } = await supabase
           .from("institutions")
           .select("id, name, logo_url, footer_message, status")
@@ -154,27 +159,29 @@ const StudentResult = () => {
 
         if (error) throw error;
         if (institutionData) {
-          setInstitution(institutionData);
+          if (active) setInstitution(institutionData);
         } else {
-          setNotFound(true);
+          if (active) setNotFound(true);
         }
       } catch (err) {
         console.error("Error fetching institution:", err);
-        setInstitutionLoadError(err instanceof Error ? err.message : "Unable to connect to the result service.");
+        if (active) setInstitutionLoadError("Unable to load this institution. Please try again shortly.");
         toast({ 
           title: "Network Error", 
           description: "Unable to load this institution. Please try again shortly.",
           variant: "destructive" 
         });
       } finally {
-        setLoadingInst(false);
+        if (active) setLoadingInst(false);
       }
     };
 
     
 
     fetchInstitution();
-
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
 
@@ -208,7 +215,7 @@ const StudentResult = () => {
           
           <!-- Institution Name -->
           <h1 style="margin: 0 0 15px 0; font-size: 36px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; position: relative; z-index: 1;">
-            ${institution?.name?.toUpperCase() || 'INSTITUTION'}
+            ${escapeCertificateText(institution?.name?.toUpperCase() || 'INSTITUTION')}
           </h1>
           
           <!-- Certificate Title -->
@@ -231,17 +238,17 @@ const StudentResult = () => {
             <div>
               <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Student Name</label>
-                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${result?.student_name || 'N/A'}</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${escapeCertificateText(result?.student_name || 'N/A')}</p>
               </div>
               <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Class</label>
-                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${result?.class || 'N/A'}</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${escapeCertificateText(result?.class || 'N/A')}</p>
               </div>
             </div>
             <div>
               <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Register Number</label>
-                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${result?.register_number || 'N/A'}</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; line-height: 1.4; display: flex; align-items: center; min-height: 50px;">${escapeCertificateText(result?.register_number || 'N/A')}</p>
               </div>
               <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 14px; font-weight: 500; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Certificate Date</label>
@@ -282,7 +289,7 @@ const StudentResult = () => {
                   const markBg = '#fee2e2';
                   return `
                     <tr style="background: ${bgColor};">
-                      <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
+                      <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${escapeCertificateText(subject.name)}</td>
                       <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
                         <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
                           ${subject.marks}
@@ -307,7 +314,7 @@ const StudentResult = () => {
                 const statusColor = status === 'PASS' ? '#059669' : '#dc2626';
                 return `
                   <tr style="background: ${bgColor};">
-                    <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${subject.name}</td>
+                    <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; font-size: 16px; color: #374151; font-weight: 500; line-height: 1.4; vertical-align: middle;">${escapeCertificateText(subject.name)}</td>
                     <td style="padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; vertical-align: middle;">
                       <span style="color: ${markColor}; font-size: 18px; font-weight: 700; display: inline-block; line-height: 1.4;">
                         ${subject.marks}
@@ -348,7 +355,7 @@ const StudentResult = () => {
                 <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
                   <span style="font-size: 24px; font-weight: 700; color: white; line-height: 1;">A+</span>
                 </div>
-                <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 10px; line-height: 1.2;">${result.grade}</div>
+                <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 10px; line-height: 1.2;">${escapeCertificateText(result.grade)}</div>
                 <div style="font-size: 14px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Grade</div>
               </div>
             ` : ''}
@@ -357,7 +364,7 @@ const StudentResult = () => {
                 <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
                   <span style="font-size: 24px; font-weight: 700; color: white; line-height: 1;">#</span>
                 </div>
-                <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 10px; line-height: 1.2;">${result.rank}</div>
+                <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 10px; line-height: 1.2;">${escapeCertificateText(result.rank)}</div>
                 <div style="font-size: 14px; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">Rank</div>
               </div>
             ` : ''}
@@ -374,7 +381,7 @@ const StudentResult = () => {
           </div>
           
           <div style="margin-bottom: 10px;">
-            <p style="margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.4;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            <p style="margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.4;">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
         </div>
       `;
