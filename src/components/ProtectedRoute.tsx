@@ -36,19 +36,6 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return <>{children}</>;
     }
     
-    // If role is still null after loading, show loading state
-    if (role === null) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="space-y-4 w-64">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-8 w-1/2" />
-          </div>
-        </div>
-      );
-    }
-    
     // User doesn't have required role, redirect to admin dashboard
     return <Navigate to="/admin" replace />;
   }
@@ -58,19 +45,6 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     // Allow access if user has super admin role
     if (role === "super_admin") {
       return <>{children}</>;
-    }
-    
-    // If role is still null after loading, show loading state
-    if (role === null) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="space-y-4 w-64">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-8 w-1/2" />
-          </div>
-        </div>
-      );
     }
     
     // User doesn't have super admin role, redirect to admin dashboard
