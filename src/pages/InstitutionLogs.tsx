@@ -7,10 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Clock, Search } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
+
+type AccessLog = Tables<"access_logs">;
 
 const InstitutionLogs = () => {
   const { institutionId } = useAuth();
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AccessLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -22,7 +25,8 @@ const InstitutionLogs = () => {
       .eq("institution_id", institutionId)
       .order("searched_at", { ascending: false })
       .limit(200)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("Unable to load search logs:", error.message);
         setLogs(data || []);
         setLoading(false);
       });

@@ -1169,7 +1169,7 @@ const StudentResult = () => {
                       {/* Mobile Card Layout */}
                       <div className="sm:hidden divide-y divide-slate-200/60 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30 rounded-xl overflow-hidden shadow-inner">
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-50"></div>
-                        {result.subjects.map((s: any, i: number) => {
+                        {result.subjects.map((s: { name: string; marks: number }, i: number) => {
                           // Find the pass mark for this subject and class
                           const passMark = passMarks.find(pm => 
                             pm.subject === s.name && pm.class === result.class
@@ -1300,7 +1300,7 @@ const StudentResult = () => {
 
                           <TableBody className="divide-y divide-slate-200/40 bg-white/60 backdrop-blur-sm">
 
-                            {result.subjects.map((s: any, i: number) => {
+                            {result.subjects.map((s: { name: string; marks: number }, i: number) => {
                               // Find the pass mark for this subject and class
                               const passMark = passMarks.find(pm => 
                                 pm.subject === s.name && pm.class === result.class

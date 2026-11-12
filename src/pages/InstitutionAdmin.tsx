@@ -37,12 +37,23 @@ interface StudentResult {
   secret_code: string;
   student_name: string;
   class: string | null;
-  subjects: any;
+  subjects: SubjectMark[] | null;
   total: number | null;
   grade: string | null;
   rank: string | null;
   published: boolean;
   created_by: string | null;
+}
+
+interface SubjectMark {
+  name: string;
+  marks: number;
+}
+
+interface InstitutionSettings {
+  name: string;
+  logo_url: string | null;
+  footer_message: string | null;
 }
 
 
@@ -84,7 +95,7 @@ const InstitutionAdmin = () => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Institution settings state
-  const [institutionData, setInstitutionData] = useState<any>(null);
+  const [institutionData, setInstitutionData] = useState<InstitutionSettings | null>(null);
   const [logoDialogOpen, setLogoDialogOpen] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
   const [loadingInstitution, setLoadingInstitution] = useState(false);
@@ -133,9 +144,9 @@ const InstitutionAdmin = () => {
       console.log("Setting logo URL:", data?.logo_url);
       setInstitutionData(data);
       setLogoUrl(data?.logo_url || "");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching institution data:", error);
-      toast({ title: "Error loading institution data", description: error.message, variant: "destructive" });
+      toast({ title: "Error loading institution data", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
       setLoadingInstitution(false);
     }
@@ -181,11 +192,11 @@ const InstitutionAdmin = () => {
       }));
       setLogoUrl(updatedData.logo_url || "");
       
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating logo:", error);
       toast({ 
         title: "Error updating logo", 
-        description: error.message || "Unknown error occurred", 
+        description: error instanceof Error ? error.message : "Unknown error occurred", 
         variant: "destructive" 
       });
     }
@@ -208,7 +219,10 @@ const InstitutionAdmin = () => {
     if (error) {
       toast({ title: "Could not load results", description: error.message, variant: "destructive" });
     }
-    setResults((data as unknown as StudentResult[]) || []);
+    setResults((data ?? []).map((row) => ({
+      ...row,
+      subjects: Array.isArray(row.subjects) ? row.subjects as SubjectMark[] : [],
+    })));
     setLoading(false);
   };
 
@@ -224,12 +238,9 @@ const InstitutionAdmin = () => {
           classSubjectMap.set(className, new Set());
         }
         
-        const subjectSet = classSubjectMap.get(className)!;
-        result.subjects.forEach((subject: any) => {
-          if (subject.name && typeof subject.name === 'string') {
-            subjectSet.add(subject.name);
-          }
-        });
+        const subjectSet = classSubjectMap.get(className);
+        if (!subjectSet) return;
+        result.subjects.forEach((subject) => subjectSet.add(subject.name));
       }
     });
 
@@ -372,7 +383,10 @@ const InstitutionAdmin = () => {
         .eq("institution_id", institutionId)
         .order("created_at", { ascending: false });
       if (refreshError) throw refreshError;
-      setResults((insertedResults as unknown as StudentResult[]) || []);
+      setResults((insertedResults ?? []).map((row) => ({
+        ...row,
+        subjects: Array.isArray(row.subjects) ? row.subjects as SubjectMark[] : [],
+      })));
       toast({
         title: `${rows.length} results uploaded successfully`,
         description: publishImmediately ? "Results are published and visible to students." : "Saved as drafts — publish them when ready.",
@@ -449,10 +463,10 @@ const InstitutionAdmin = () => {
       });
       setSelectedResults([]);
       fetchResults();
-    } catch (error: any) {
+    } catch (error) {
       toast({ 
         title: "Bulk delete failed", 
-        description: error.message, 
+        description: error instanceof Error ? error.message : "Please try again.", 
         variant: "destructive" 
       });
     } finally {
@@ -507,10 +521,10 @@ const InstitutionAdmin = () => {
         resetPassMarkForm();
         fetchPassMarks();
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({ 
         title: "Operation failed", 
-        description: error.message, 
+        description: error instanceof Error ? error.message : "Please try again.", 
         variant: "destructive" 
       });
     }
@@ -534,10 +548,10 @@ const InstitutionAdmin = () => {
       
       toast({ title: "Pass mark deleted successfully" });
       fetchPassMarks();
-    } catch (error: any) {
+    } catch (error) {
       toast({ 
         title: "Delete failed", 
-        description: error.message, 
+        description: error instanceof Error ? error.message : "Please try again.", 
         variant: "destructive" 
       });
     }
@@ -568,10 +582,10 @@ const InstitutionAdmin = () => {
       });
       setSelectedResults([]);
       fetchResults();
-    } catch (error: any) {
+    } catch (error) {
       toast({ 
         title: `Bulk ${publish ? 'publish' : 'draft'} failed`, 
-        description: error.message, 
+        description: error instanceof Error ? error.message : "Please try again.", 
         variant: "destructive" 
       });
     } finally {
@@ -877,16 +891,14 @@ const InstitutionAdmin = () => {
               <div className="flex items-center gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
-                    {(institutionData?.logo_url || "/icon.png") ? (
+                    {institutionData?.logo_url ? (
                       <img 
-                        src={institutionData?.logo_url || "/icon.png"} 
+                        src={institutionData.logo_url} 
                         alt="Institution logo" 
                         className="max-w-full max-h-full object-contain rounded-lg"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== "/icon.png") {
-                            target.src = "/icon.png";
-                          }
+                          target.style.display = "none";
                         }}
                       />
                     ) : (

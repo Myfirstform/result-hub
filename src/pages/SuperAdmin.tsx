@@ -86,7 +86,7 @@ const SuperAdmin = () => {
         if (authError) {
           toast({ title: "Admin creation failed", description: authError.message, variant: "destructive" });
         } else if (authData.user) {
-          await supabase.from("user_roles").insert({ user_id: authData.user.id, role: "institution_admin" as any });
+          await supabase.from("user_roles").insert({ user_id: authData.user.id, role: "institution_admin" });
           await supabase.from("institution_admins").insert({ user_id: authData.user.id, institution_id: inst.id });
           toast({ title: "Institution & admin created" });
         }
