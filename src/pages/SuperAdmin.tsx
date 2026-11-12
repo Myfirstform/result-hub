@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Building, Users, TrendingUp, Search, Filter, Download, RefreshCw, Mail, Phone, Globe, Shield, AlertCircle, CheckCircle, Crown, Sparkles, Eye, EyeOff, MoreHorizontal, ImageIcon } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import type { Enums } from "@/integrations/supabase/types";
 
 
 type Institution = Tables<"institutions">;
@@ -86,8 +87,17 @@ const SuperAdmin = () => {
         if (authError) {
           toast({ title: "Admin creation failed", description: authError.message, variant: "destructive" });
         } else if (authData.user) {
-          await supabase.from("user_roles").insert({ user_id: authData.user.id, role: "institution_admin" as any });
-          await supabase.from("institution_admins").insert({ user_id: authData.user.id, institution_id: inst.id });
+          const { error: roleError } = await supabase.from("user_roles").insert({
+            user_id: authData.user.id,
+            role: "institution_admin" satisfies Enums<"app_role">,
+          });
+          const { error: assignmentError } = roleError
+            ? { error: roleError }
+            : await supabase.from("institution_admins").insert({ user_id: authData.user.id, institution_id: inst.id });
+          if (assignmentError) {
+            toast({ title: "Admin assignment failed", description: assignmentError.message, variant: "destructive" });
+            return;
+          }
           toast({ title: "Institution & admin created" });
         }
       } else {

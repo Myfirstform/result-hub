@@ -22,37 +22,20 @@ const RoleAssigner = () => {
     setLoading(true);
 
     try {
-      // Get user by email
-      const { data, error: userError } = await supabase.auth.admin.listUsers() as any;
-      if (userError) throw userError;
-
-      const user = (data?.users as any[])?.find((u: any) => u.email === email);
-      if (!user) {
-        toast({ title: "User not found", description: "Make sure the user is registered", variant: "destructive" });
-        return;
-      }
-
-      // Assign role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert({ user_id: user.id, role }, { onConflict: "user_id,role" });
-
-      if (roleError) throw roleError;
-
-      // If institution admin, assign institution
-      if (role === "institution_admin" && institutionId) {
-        const { error: adminError } = await supabase
-          .from("institution_admins")
-          .upsert({ user_id: user.id, institution_id: institutionId }, { onConflict: "user_id,institution_id" } as any);
-
-        if (adminError) throw adminError;
-      }
+      const { error } = await supabase.functions.invoke("assign-user-role", {
+        body: {
+          email: email.trim(),
+          role,
+          institution_id: role === "institution_admin" ? institutionId : null,
+        },
+      });
+      if (error) throw error;
 
       toast({ title: "Role assigned successfully" });
       setEmail("");
       setInstitutionId("");
-    } catch (error: any) {
-      toast({ title: "Failed to assign role", description: error.message, variant: "destructive" });
+    } catch (error) {
+      toast({ title: "Failed to assign role", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -78,7 +61,9 @@ const RoleAssigner = () => {
 
           <div>
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(value: any) => setRole(value)}>
+            <Select value={role} onValueChange={(value) => {
+              if (value === "super_admin" || value === "institution_admin") setRole(value);
+            }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

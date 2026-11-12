@@ -437,11 +437,6 @@ const StudentResult = () => {
 
     setSearching(true);
     setResult(null);
-    void supabase.from("access_logs").insert({
-      institution_id: institution.id,
-      register_number: normalizedRegister,
-    });
-
     let searchError: unknown = null;
     let completed = false;
     let resultData: ResultData | null = null;
@@ -449,18 +444,18 @@ const StudentResult = () => {
     try {
       for (let attempt = 0; attempt < 3 && !completed; attempt += 1) {
         try {
-          const { data, error } = await supabase
-            .from("student_results")
-            .select("student_name, register_number, class, subjects, total, grade, rank")
-            .eq("institution_id", institution.id)
-            .eq("register_number", normalizedRegister)
-            .eq("secret_code", normalizedSecret)
-            .eq("published", true)
-            .maybeSingle();
+          const { data, error } = await supabase.functions.invoke("student-result-lookup", {
+            body: {
+              institution_id: institution.id,
+              register_number: normalizedRegister,
+              secret_code: normalizedSecret,
+            },
+          });
 
           if (error) throw error;
+          if (data?.error) throw new Error(data.error);
           completed = true;
-          resultData = data as ResultData | null;
+          resultData = data?.result as ResultData | null;
         } catch (error) {
           searchError = error;
           if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
@@ -1174,7 +1169,7 @@ const StudentResult = () => {
                       {/* Mobile Card Layout */}
                       <div className="sm:hidden divide-y divide-slate-200/60 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30 rounded-xl overflow-hidden shadow-inner">
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-50"></div>
-                        {result.subjects.map((s: any, i: number) => {
+                        {result.subjects.map((s: { name: string; marks: number }, i: number) => {
                           // Find the pass mark for this subject and class
                           const passMark = passMarks.find(pm => 
                             pm.subject === s.name && pm.class === result.class
@@ -1305,7 +1300,7 @@ const StudentResult = () => {
 
                           <TableBody className="divide-y divide-slate-200/40 bg-white/60 backdrop-blur-sm">
 
-                            {result.subjects.map((s: any, i: number) => {
+                            {result.subjects.map((s: { name: string; marks: number }, i: number) => {
                               // Find the pass mark for this subject and class
                               const passMark = passMarks.find(pm => 
                                 pm.subject === s.name && pm.class === result.class

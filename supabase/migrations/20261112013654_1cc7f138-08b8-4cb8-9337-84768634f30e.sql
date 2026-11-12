@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.lookup_published_student_result(uuid, text, text);
