@@ -1,1 +1,4 @@
 project_id = "ltemejxbuiylzqiynhhr"
+
+[functions.student-result-lookup]
+verify_jwt = false

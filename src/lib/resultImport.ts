@@ -75,7 +75,7 @@ export function validateResultImport(
     };
   }
 
-  const reservedHeaders = new Set(Object.values(FIELD_ALIASES).flat());
+  const reservedHeaders = new Set<string>(Object.values(FIELD_ALIASES).flat());
   const subjectHeaders = originalHeaders.filter((header) => {
     const normalized = normalizeHeader(header);
     return normalized.length > 0 && !reservedHeaders.has(normalized);
