@@ -47,11 +47,14 @@ Deno.serve(async (request) => {
   try {
     const { data, error } = await adminClient
       .from("student_results")
-      .select("student_name, register_number, class, subjects, total, grade, rank")
+      .select("student_name, register_number, class, subjects, total, grade, rank, institutions!inner(status)")
       .eq("institution_id", institutionId)
+      .eq("institutions.status", "active")
       .eq("register_number", registerNumber)
       .eq("secret_code", secretCode)
       .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {

@@ -56,6 +56,16 @@ interface InstitutionSettings {
   footer_message: string | null;
 }
 
+const normalizeSubjects = (value: unknown): SubjectMark[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry): SubjectMark[] => {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return [];
+    const subject = entry as Record<string, unknown>;
+    if (typeof subject.name !== "string" || typeof subject.marks !== "number") return [];
+    return [{ name: subject.name, marks: subject.marks }];
+  });
+};
+
 
 
 interface PassMark {
@@ -221,7 +231,7 @@ const InstitutionAdmin = () => {
     }
     setResults((data ?? []).map((row) => ({
       ...row,
-      subjects: Array.isArray(row.subjects) ? row.subjects as SubjectMark[] : [],
+      subjects: normalizeSubjects(row.subjects),
     })));
     setLoading(false);
   };
@@ -385,7 +395,7 @@ const InstitutionAdmin = () => {
       if (refreshError) throw refreshError;
       setResults((insertedResults ?? []).map((row) => ({
         ...row,
-        subjects: Array.isArray(row.subjects) ? row.subjects as SubjectMark[] : [],
+        subjects: normalizeSubjects(row.subjects),
       })));
       toast({
         title: `${rows.length} results uploaded successfully`,
