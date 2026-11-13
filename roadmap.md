@@ -2,4 +2,4 @@
 - [ ] Validate spreadsheet rows, prevent duplicate inserts, and confirm saved results refresh.
 - [ ] Correct student lookup states for missing results versus service failures.
 - [ ] Clear current lint/type errors and run targeted tests plus a production build.
-- [ ] Review this roadmap before reporting completion.
+- [ ] Review this roadmap before reporting completion.- [ ] Fix student lookup showing a network error for ordinary result searches.
